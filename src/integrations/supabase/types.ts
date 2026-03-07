@@ -312,6 +312,7 @@ export type Database = {
         Row: {
           company_id: string
           created_at: string
+          eta: string | null
           expected_date: string | null
           id: string
           location_id: string | null
@@ -319,12 +320,16 @@ export type Database = {
           manufacturer_name: string
           notes: string | null
           received_date: string | null
+          request_date: string | null
+          shipment_date: string | null
           status: string
+          tracking_number: string | null
           updated_at: string
         }
         Insert: {
           company_id: string
           created_at?: string
+          eta?: string | null
           expected_date?: string | null
           id?: string
           location_id?: string | null
@@ -332,12 +337,16 @@ export type Database = {
           manufacturer_name: string
           notes?: string | null
           received_date?: string | null
+          request_date?: string | null
+          shipment_date?: string | null
           status?: string
+          tracking_number?: string | null
           updated_at?: string
         }
         Update: {
           company_id?: string
           created_at?: string
+          eta?: string | null
           expected_date?: string | null
           id?: string
           location_id?: string | null
@@ -345,7 +354,10 @@ export type Database = {
           manufacturer_name?: string
           notes?: string | null
           received_date?: string | null
+          request_date?: string | null
+          shipment_date?: string | null
           status?: string
+          tracking_number?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -455,6 +467,7 @@ export type Database = {
           currency: string
           customer_email: string | null
           customer_name: string | null
+          customer_phone: string | null
           id: string
           order_date: string | null
           order_number: string
@@ -463,6 +476,7 @@ export type Database = {
           status: string
           total_amount: number | null
           updated_at: string
+          woo_status: string | null
         }
         Insert: {
           company_id: string
@@ -470,6 +484,7 @@ export type Database = {
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_phone?: string | null
           id?: string
           order_date?: string | null
           order_number: string
@@ -478,6 +493,7 @@ export type Database = {
           status?: string
           total_amount?: number | null
           updated_at?: string
+          woo_status?: string | null
         }
         Update: {
           company_id?: string
@@ -485,6 +501,7 @@ export type Database = {
           currency?: string
           customer_email?: string | null
           customer_name?: string | null
+          customer_phone?: string | null
           id?: string
           order_date?: string | null
           order_number?: string
@@ -493,6 +510,7 @@ export type Database = {
           status?: string
           total_amount?: number | null
           updated_at?: string
+          woo_status?: string | null
         }
         Relationships: [
           {
@@ -597,11 +615,15 @@ export type Database = {
           notes: string | null
           order_id: string | null
           outcome_location_id: string | null
+          product_id: string | null
           reason: string | null
           received_date: string | null
           refund_amount: number | null
+          resolution: string | null
           resolved_date: string | null
           return_number: string | null
+          return_qty: number | null
+          sku: string | null
           status: string
           stock_outcome: string | null
           updated_at: string
@@ -615,11 +637,15 @@ export type Database = {
           notes?: string | null
           order_id?: string | null
           outcome_location_id?: string | null
+          product_id?: string | null
           reason?: string | null
           received_date?: string | null
           refund_amount?: number | null
+          resolution?: string | null
           resolved_date?: string | null
           return_number?: string | null
+          return_qty?: number | null
+          sku?: string | null
           status?: string
           stock_outcome?: string | null
           updated_at?: string
@@ -633,11 +659,15 @@ export type Database = {
           notes?: string | null
           order_id?: string | null
           outcome_location_id?: string | null
+          product_id?: string | null
           reason?: string | null
           received_date?: string | null
           refund_amount?: number | null
+          resolution?: string | null
           resolved_date?: string | null
           return_number?: string | null
+          return_qty?: number | null
+          sku?: string | null
           status?: string
           stock_outcome?: string | null
           updated_at?: string
@@ -662,6 +692,13 @@ export type Database = {
             columns: ["outcome_location_id"]
             isOneToOne: false
             referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "returns_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]
