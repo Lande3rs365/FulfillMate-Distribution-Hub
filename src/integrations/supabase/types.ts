@@ -1004,6 +1004,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_company_with_owner: {
+        Args: {
+          _company_code: string
+          _company_id: string
+          _company_name: string
+        }
+        Returns: undefined
+      }
       get_user_company_ids: { Args: { _user_id: string }; Returns: string[] }
       user_belongs_to_company: {
         Args: { _company_id: string; _user_id: string }
