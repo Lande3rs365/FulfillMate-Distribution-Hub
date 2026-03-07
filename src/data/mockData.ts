@@ -343,26 +343,3 @@ export const kpiData = {
   inboundReceived: 3,
   inboundOverdue: 1,
 };
-  { id: 'EXC-001', orderId: 'WOO-10422', type: 'Stock Unavailable', severity: 'high', description: 'OMEGA-3-120 out of stock — order cannot be fulfilled', detectedAt: '2026-03-03T09:00:00Z', resolved: false },
-  { id: 'EXC-002', orderId: 'WOO-10424', type: 'Status Mismatch', severity: 'critical', description: 'Order marked completed in WooCommerce but no shipment record exists', detectedAt: '2026-03-04T08:00:00Z', resolved: false },
-  { id: 'EXC-003', orderId: 'WOO-10428', type: 'Backorder', severity: 'medium', description: 'SKU OMEGA-3-120 backordered — no confirmed restock date', detectedAt: '2026-03-05T09:00:00Z', resolved: false },
-  { id: 'EXC-004', orderId: 'WOO-10415', type: 'Missing Tracking', severity: 'low', description: 'Shipment created 5 days ago but tracking not scanning', detectedAt: '2026-03-02T12:00:00Z', resolved: true },
-];
-
-export const kpiData = {
-  totalOrders: 847,
-  totalShipments: 792,
-  totalSKUs: 156,
-  stockOnHand: 14280,
-  ordersMatched: 768,
-  ordersUnmatched: 79,
-  shipmentsUnmatched: 24,
-  backlogOrders: 43,
-  awaitingShipment: 31,
-  delayedByStock: 18,
-  ordersShipped: 724,
-  missingTracking: 12,
-  exceptions: 7,
-  lowStockItems: 14,
-  outOfStockItems: 5,
-};
