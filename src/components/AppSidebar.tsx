@@ -92,6 +92,7 @@ export default function AppSidebar() {
         </div>
       )}
 
+      <nav className="flex-1 py-3 px-2 space-y-0.5">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname === to;
           return (
