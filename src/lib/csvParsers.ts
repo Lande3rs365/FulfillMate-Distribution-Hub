@@ -152,6 +152,67 @@ export function parseWooCommerceCSV(csvText: string): ParsedOrder[] {
   }).filter(o => o.order_number);
 }
 
+// ── Shipment CSV Parser ──
+// Headers: Order Number, Order Date, WOO Status, Order Total, Customer Name, Items,
+// shipping_country, Tracking Number, Carrier, Service, Tracking Status, Tracking Date, Est Deliver, Cost
+
+export interface ParsedShipment {
+  order_number: string;
+  tracking_number: string | null;
+  carrier: string | null;
+  status: string;
+  shipped_date: string | null;
+  delivered_date: string | null;
+  shipping_cost: number | null;
+  // For matching/creating the order if needed
+  order_date: string | null;
+  woo_status: string | null;
+  order_total: number | null;
+  customer_name: string | null;
+  items: string | null;
+}
+
+function mapTrackingStatus(raw: string): string {
+  const s = (raw || "").toLowerCase().trim();
+  if (s.includes("deliver")) return "delivered";
+  if (s.includes("transit") || s.includes("shipped")) return "in-transit";
+  if (s.includes("label") || s.includes("created") || s.includes("pre")) return "label-created";
+  if (s.includes("pick") || s.includes("accept")) return "in-transit";
+  return s || "label-created";
+}
+
+export function parseShipmentCSV(csvText: string): ParsedShipment[] {
+  const result = Papa.parse<Record<string, string>>(csvText, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (h) => h.trim().toLowerCase().replace(/\s+/g, "_"),
+  });
+
+  if (result.errors.length > 0) {
+    console.warn("CSV parse warnings:", result.errors);
+  }
+
+  return result.data.map((row) => {
+    const trackingStatus = mapTrackingStatus(row.tracking_status || "");
+    const trackingDate = row.tracking_date ? new Date(row.tracking_date).toISOString() : null;
+    
+    return {
+      order_number: (row.order_number || "").trim(),
+      tracking_number: (row.tracking_number || "").trim() || null,
+      carrier: (row.carrier || "").trim() || null,
+      status: trackingStatus,
+      shipped_date: trackingStatus !== "label-created" ? trackingDate : null,
+      delivered_date: trackingStatus === "delivered" ? trackingDate : null,
+      shipping_cost: row.cost ? parseFloat(row.cost.replace(/[^0-9.]/g, "")) : null,
+      order_date: row.order_date ? new Date(row.order_date).toISOString() : null,
+      woo_status: (row.woo_status || "").toLowerCase().replace(/^wc-/, "").trim() || null,
+      order_total: row.order_total ? parseFloat(row.order_total.replace(/[^0-9.]/g, "")) : null,
+      customer_name: (row.customer_name || "").trim() || null,
+      items: (row.items || "").trim() || null,
+    };
+  }).filter(s => s.order_number);
+}
+
 export function readFileAsText(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
