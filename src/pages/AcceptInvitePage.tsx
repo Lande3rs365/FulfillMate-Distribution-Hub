@@ -12,6 +12,13 @@ import { Loader2, CheckCircle2, XCircle, TicketCheck } from "lucide-react";
 
 const db = supabase as any;
 
+interface InviteResult {
+  success: boolean;
+  message?: string;
+  error?: string;
+  company_id?: string;
+}
+
 export default function AcceptInvitePage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
