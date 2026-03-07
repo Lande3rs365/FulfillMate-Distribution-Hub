@@ -309,11 +309,6 @@ export default function ReturnsPage() {
                         <p className="text-sm text-foreground mt-1">{notes}</p>
                       </div>
                     )}
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    )}
                   </div>
 
                   <div className="flex gap-3">
