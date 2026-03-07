@@ -3,7 +3,14 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import AppLayout from "@/components/AppLayout";
+import Dashboard from "@/pages/Dashboard";
+import OrdersPage from "@/pages/OrdersPage";
+import InventoryPage from "@/pages/InventoryPage";
+import ShipmentsPage from "@/pages/ShipmentsPage";
+import UploadsPage from "@/pages/UploadsPage";
+import ExceptionsPage from "@/pages/ExceptionsPage";
+import ExportsPage from "@/pages/ExportsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,11 +21,18 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AppLayout>
+          <Routes>
+            <Route path="/" element={<Dashboard />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/inventory" element={<InventoryPage />} />
+            <Route path="/shipments" element={<ShipmentsPage />} />
+            <Route path="/uploads" element={<UploadsPage />} />
+            <Route path="/exceptions" element={<ExceptionsPage />} />
+            <Route path="/exports" element={<ExportsPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AppLayout>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
