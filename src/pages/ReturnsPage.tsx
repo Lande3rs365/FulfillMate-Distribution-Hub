@@ -6,11 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import {
   RotateCcw, PackageCheck, ShieldAlert, Search as SearchIcon,
-  AlertTriangle, ClipboardCheck, Calendar, ExternalLink,
-  CheckCircle2, ArrowRight
+  AlertTriangle, ClipboardCheck, Camera, X,
+  CheckCircle2, ArrowRight, ImageIcon
 } from "lucide-react";
 
 type ReturnCondition = 'resellable' | 'damaged' | 'defective' | 'inspection-required';
+
+interface ReturnAttachment {
+  file: File;
+  preview: string;
+  type: 'image' | 'video';
+}
 
 interface ReturnEntry {
   id: string;
@@ -20,6 +26,7 @@ interface ReturnEntry {
   quantity: number;
   condition: ReturnCondition;
   notes: string;
+  attachmentCount: number;
   timestamp: string;
   movementType: MovementType;
   direction: MovementDirection;
@@ -80,6 +87,7 @@ export default function ReturnsPage() {
   const [quantity, setQuantity] = useState(1);
   const [condition, setCondition] = useState<ReturnCondition | null>(null);
   const [notes, setNotes] = useState('');
+  const [attachments, setAttachments] = useState<ReturnAttachment[]>([]);
   const [processedReturns, setProcessedReturns] = useState<ReturnEntry[]>([]);
 
   const matchedOrder = mockOrders.find(o => o.orderId.toLowerCase() === orderId.trim().toLowerCase());
@@ -93,6 +101,26 @@ export default function ReturnsPage() {
     setStep('confirm');
   }
 
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const files = e.target.files;
+    if (!files) return;
+    const newAttachments: ReturnAttachment[] = Array.from(files).map(file => ({
+      file,
+      preview: URL.createObjectURL(file),
+      type: file.type.startsWith('video/') ? 'video' : 'image',
+    }));
+    setAttachments(prev => [...prev, ...newAttachments]);
+    e.target.value = '';
+  }
+
+  function removeAttachment(index: number) {
+    setAttachments(prev => {
+      const removed = prev[index];
+      URL.revokeObjectURL(removed.preview);
+      return prev.filter((_, i) => i !== index);
+    });
+  }
+
   function handleConfirm() {
     if (!condition || !matchedOrder || !matchedItem) return;
     const cfg = conditionConfig[condition];
@@ -104,12 +132,14 @@ export default function ReturnsPage() {
       quantity,
       condition,
       notes,
+      attachmentCount: attachments.length,
       timestamp: new Date().toISOString(),
       movementType: cfg.movementType,
       direction: cfg.direction,
       stockOutcome: cfg.stockOutcome,
     };
     setProcessedReturns(prev => [entry, ...prev]);
+    attachments.forEach(a => URL.revokeObjectURL(a.preview));
     setStep('done');
   }
 
@@ -120,6 +150,7 @@ export default function ReturnsPage() {
     setQuantity(1);
     setCondition(null);
     setNotes('');
+    setAttachments([]);
   }
 
   return (
@@ -251,6 +282,51 @@ export default function ReturnsPage() {
                     </div>
                   )}
 
+                  {/* Photo / Video upload */}
+                  {condition && (
+                    <div className="space-y-2">
+                      <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        Inspection Photos / Video
+                      </label>
+                      <p className="text-xs text-muted-foreground">
+                        Upload photos or a short video of the returned item for the inspection team.
+                      </p>
+
+                      <div className="flex flex-wrap gap-3">
+                        {attachments.map((att, i) => (
+                          <div key={i} className="relative w-20 h-20 rounded-lg border border-border overflow-hidden bg-muted/30 group">
+                            {att.type === 'image' ? (
+                              <img src={att.preview} alt={`Return attachment ${i + 1}`} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center">
+                                <Camera className="w-6 h-6 text-muted-foreground" />
+                                <span className="absolute bottom-1 text-[9px] text-muted-foreground">Video</span>
+                              </div>
+                            )}
+                            <button
+                              onClick={() => removeAttachment(i)}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-destructive/90 text-destructive-foreground flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+
+                        <label className="w-20 h-20 rounded-lg border border-dashed border-border bg-muted/20 flex flex-col items-center justify-center gap-1 cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors">
+                          <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-[9px] text-muted-foreground">Add</span>
+                          <input
+                            type="file"
+                            accept="image/*,video/*"
+                            multiple
+                            onChange={handleFileChange}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                    </div>
+                  )}
+
                   <Button onClick={handleSubmit} disabled={!canProceed} className="w-full sm:w-auto">
                     Review Return <ArrowRight className="w-4 h-4" />
                   </Button>
@@ -299,6 +375,24 @@ export default function ReturnsPage() {
                       <div className="pt-2 border-t border-border">
                         <span className="text-xs text-muted-foreground">Notes</span>
                         <p className="text-sm text-foreground mt-1">{notes}</p>
+                      </div>
+                    )}
+                    {attachments.length > 0 && (
+                      <div className="pt-2 border-t border-border">
+                        <span className="text-xs text-muted-foreground">Attachments</span>
+                        <div className="flex gap-2 mt-2">
+                          {attachments.map((att, i) => (
+                            <div key={i} className="w-14 h-14 rounded border border-border overflow-hidden">
+                              {att.type === 'image' ? (
+                                <img src={att.preview} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-muted/30">
+                                  <Camera className="w-4 h-4 text-muted-foreground" />
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>
@@ -420,36 +514,6 @@ export default function ReturnsPage() {
             </Card>
           )}
 
-          {/* Calendly booking placeholder */}
-          <Card className="border-dashed">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-primary" />
-                Distribution Support
-              </CardTitle>
-              <CardDescription>
-                Complex return? Book a support slot with the distribution team.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                The team is available for 2-hour daily sessions to handle distribution queries, 
-                warranty claims, and complex return cases. Book via Calendly below.
-              </p>
-              <div className="bg-muted/30 border border-border rounded-lg p-6 flex flex-col items-center gap-3 text-center">
-                <Calendar className="w-8 h-8 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">Calendly embed will appear here</p>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://calendly.com" target="_blank" rel="noopener noreferrer">
-                    Open Calendly <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground text-center">
-                Replace placeholder with your Calendly URL when ready
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
