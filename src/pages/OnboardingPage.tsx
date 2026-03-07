@@ -62,13 +62,12 @@ export default function OnboardingPage() {
 
     try {
       const db = supabase as any;
+      const companyId = crypto.randomUUID();
 
       // 1. Create company
-      const { data: company, error: companyError } = await db
+      const { error: companyError } = await db
         .from("companies")
-        .insert({ name: companyName.trim(), code: companyCode.trim().toUpperCase() })
-        .select()
-        .single();
+        .insert({ id: companyId, name: companyName.trim(), code: companyCode.trim().toUpperCase() });
 
       if (companyError) throw companyError;
 
