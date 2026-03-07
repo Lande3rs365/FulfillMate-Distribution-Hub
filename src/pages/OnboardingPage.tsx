@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -109,6 +110,10 @@ export default function OnboardingPage() {
       }, 1500);
     } catch (err: any) {
       console.error("Onboarding error:", err);
+      const message = err?.code === "23505"
+        ? "That company code is already taken. Please go back and choose a different one."
+        : err?.message || "Something went wrong. Please try again.";
+      toast({ title: "Setup failed", description: message, variant: "destructive" });
       setLoading(false);
     }
   };
