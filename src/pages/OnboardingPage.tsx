@@ -74,7 +74,7 @@ export default function OnboardingPage() {
       // 2. Link user to company
       const { error: linkError } = await db
         .from("user_companies")
-        .insert({ user_id: user.id, company_id: company.id, role: "owner" });
+        .insert({ user_id: user.id, company_id: companyId, role: "owner" });
 
       if (linkError) throw linkError;
 
