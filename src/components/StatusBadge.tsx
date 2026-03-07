@@ -33,6 +33,15 @@ const statusMap: Record<string, string> = {
   'damaged': 'status-exception',
   'defective': 'status-exception',
   'in-quarantine': 'status-low-stock',
+  'expected': 'status-processing',
+  'received': 'status-shipped',
+  'partial-receipt': 'status-low-stock',
+  'short-receipt': 'status-out-of-stock',
+  'damaged-on-arrival': 'status-exception',
+  'overdue': 'status-exception',
+  'pending': 'status-processing',
+  'partial': 'status-low-stock',
+  'short': 'status-out-of-stock',
 };
 
 export default function StatusBadge({ status, className }: StatusBadgeProps) {

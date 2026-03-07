@@ -1,11 +1,12 @@
 import KpiCard from "@/components/KpiCard";
 import StatusBadge from "@/components/StatusBadge";
-import { kpiData, mockOrders, mockExceptions, mockInventory } from "@/data/mockData";
+import { kpiData, mockOrders, mockExceptions, mockInventory, mockSupplierManifests } from "@/data/mockData";
 import {
   Package, Truck, Warehouse, AlertTriangle, CheckCircle,
-  Clock, XCircle, ArrowUpRight, BarChart3
+  Clock, XCircle, ArrowUpRight, BarChart3, Ship
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
+import { useNavigate } from "react-router-dom";
 
 const chartData = [
   { name: 'Shipped', value: kpiData.ordersShipped, color: 'hsl(142, 71%, 45%)' },
@@ -15,6 +16,7 @@ const chartData = [
 ];
 
 export default function Dashboard() {
+  const navigate = useNavigate();
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -73,6 +75,25 @@ export default function Dashboard() {
               </div>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* Supplier Inbound */}
+      <div className="bg-card border border-border rounded-lg p-5">
+        <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
+          <Ship className="w-4 h-4 text-info" />
+          Supplier Inbound
+        </h2>
+        <div className="space-y-2">
+          {mockSupplierManifests.map(m => (
+            <div key={m.manifestId} className="flex items-center justify-between p-3 rounded-md bg-muted/30 border border-border/50">
+              <div>
+                <p className="text-sm font-medium text-foreground">{m.supplierName}</p>
+                <p className="text-xs text-muted-foreground font-mono">{m.manifestId} · {m.rows.map(r => r.sku).join(', ')}</p>
+              </div>
+              <StatusBadge status={m.inboundStatus} />
+            </div>
+          ))}
         </div>
       </div>
 
