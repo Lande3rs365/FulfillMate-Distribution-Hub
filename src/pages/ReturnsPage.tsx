@@ -115,7 +115,7 @@ export default function ReturnsPage() {
       stockOutcome: cfg.stockOutcome,
     };
     setProcessedReturns(prev => [entry, ...prev]);
-    attachments.forEach(a => URL.revokeObjectURL(a.preview));
+    
     setStep('done');
   }
 
