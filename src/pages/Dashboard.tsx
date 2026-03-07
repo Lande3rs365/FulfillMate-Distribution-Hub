@@ -1,9 +1,9 @@
 import KpiCard from "@/components/KpiCard";
 import StatusBadge from "@/components/StatusBadge";
-import { kpiData, mockOrders, mockExceptions, mockInventory, mockSupplierManifests } from "@/data/mockData";
+import { kpiData, mockOrders, mockExceptions, mockInventory, mockSupplierManifests, mockMovements } from "@/data/mockData";
 import {
   Package, Truck, Warehouse, AlertTriangle, CheckCircle,
-  Clock, XCircle, ArrowUpRight, BarChart3, Ship
+  Clock, XCircle, ArrowUpRight, BarChart3, Ship, RotateCcw
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
