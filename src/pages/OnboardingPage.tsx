@@ -204,64 +204,70 @@ export default function OnboardingPage() {
                 Stock Locations
               </CardTitle>
               <CardDescription className="text-muted-foreground">
-                These locations define where inventory can exist. Toggle off any you don't need, or add custom ones.
+                Define where your inventory lives. You can add up to {MAX_LOCATIONS} locations.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {locations.map((loc, i) => (
-                  <button
+                  <div
                     key={i}
-                    type="button"
-                    onClick={() => toggleLocation(i)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${
-                      loc.enabled
-                        ? "border-primary/50 bg-primary/5 text-foreground"
-                        : "border-border bg-card text-muted-foreground opacity-50"
-                    }`}
+                    className="rounded-md border border-border bg-muted/30 p-4 space-y-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center ${
-                        loc.enabled ? "bg-primary border-primary" : "border-border"
-                      }`}>
-                        {loc.enabled && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        {loc.isPrimary ? "Primary Location" : `Location ${i + 1}`}
+                      </span>
+                      {!loc.isPrimary && (
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(i)}
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs">Name</Label>
+                        <Input
+                          placeholder="e.g. Main Warehouse"
+                          value={loc.name}
+                          onChange={e => updateLocation(i, "name", e.target.value)}
+                        />
                       </div>
-                      <div className="text-left">
-                        <p className="font-medium">{loc.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{loc.code} · {loc.location_type}</p>
+                      <div className="w-32 space-y-1">
+                        <Label className="text-xs">Code</Label>
+                        <Input
+                          placeholder="LOC-01"
+                          value={loc.code}
+                          onChange={e => updateLocation(i, "code", e.target.value)}
+                          maxLength={15}
+                          className="font-mono"
+                        />
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
 
-              {/* Add custom location */}
-              <div className="border-t border-border pt-4">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Add Custom Location</p>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Location name"
-                    value={customLocName}
-                    onChange={e => setCustomLocName(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Code"
-                    value={customLocCode}
-                    onChange={e => setCustomLocCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
-                    className="w-32"
-                    maxLength={15}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addCustomLocation}
-                    disabled={!customLocName.trim() || !customLocCode.trim()}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </div>
+              {locations.length < MAX_LOCATIONS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addLocation}
+                  className="w-full border-dashed"
+                >
+                  <Plus className="w-4 h-4" /> Add Location
+                </Button>
+              )}
+
+              {locations.length >= MAX_LOCATIONS && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Maximum of {MAX_LOCATIONS} locations reached.
+                </p>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={() => setStep("company")} className="flex-1">
@@ -269,7 +275,7 @@ export default function OnboardingPage() {
                 </Button>
                 <Button
                   onClick={handleFinish}
-                  disabled={loading || locations.filter(l => l.enabled).length === 0}
+                  disabled={loading || !locations.some(l => l.name.trim() && l.code.trim())}
                   className="flex-1"
                 >
                   {loading ? (
@@ -293,7 +299,7 @@ export default function OnboardingPage() {
               <CardTitle className="text-xl text-foreground">You're all set!</CardTitle>
               <CardDescription className="text-muted-foreground">
                 <strong className="text-foreground">{companyName}</strong> has been created with{" "}
-                {locations.filter(l => l.enabled).length} stock locations. Redirecting to your dashboard…
+                {locations.filter(l => l.name.trim() && l.code.trim()).length} stock location{locations.filter(l => l.name.trim() && l.code.trim()).length !== 1 ? "s" : ""}. Redirecting to your dashboard…
               </CardDescription>
               <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />
             </CardHeader>
