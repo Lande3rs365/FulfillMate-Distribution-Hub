@@ -514,36 +514,6 @@ export default function ReturnsPage() {
             </Card>
           )}
 
-          {/* Calendly booking placeholder */}
-          <Card className="border-dashed">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-primary" />
-                Distribution Support
-              </CardTitle>
-              <CardDescription>
-                Complex return? Book a support slot with the distribution team.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                The team is available for 2-hour daily sessions to handle distribution queries, 
-                warranty claims, and complex return cases. Book via Calendly below.
-              </p>
-              <div className="bg-muted/30 border border-border rounded-lg p-6 flex flex-col items-center gap-3 text-center">
-                <Calendar className="w-8 h-8 text-muted-foreground" />
-                <p className="text-xs text-muted-foreground">Calendly embed will appear here</p>
-                <Button variant="outline" size="sm" asChild>
-                  <a href="https://calendly.com" target="_blank" rel="noopener noreferrer">
-                    Open Calendly <ExternalLink className="w-3.5 h-3.5" />
-                  </a>
-                </Button>
-              </div>
-              <p className="text-[10px] text-muted-foreground text-center">
-                Replace placeholder with your Calendly URL when ready
-              </p>
-            </CardContent>
-          </Card>
         </div>
       </div>
     </div>
