@@ -3,6 +3,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import AppLayout from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import OrdersPage from "@/pages/OrdersPage";
@@ -16,6 +18,8 @@ import StockMovementsPage from "@/pages/StockMovementsPage";
 import AdjustmentsPage from "@/pages/AdjustmentsPage";
 import SupplierManifestsPage from "@/pages/SupplierManifestsPage";
 import ReturnsPage from "@/pages/ReturnsPage";
+import LoginPage from "@/pages/LoginPage";
+import SignupPage from "@/pages/SignupPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,23 +30,36 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <AppLayout>
+        <AuthProvider>
           <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/orders" element={<OrdersPage />} />
-            <Route path="/orders/:orderId" element={<OrderDetailPage />} />
-            <Route path="/inventory" element={<InventoryPage />} />
-            <Route path="/shipments" element={<ShipmentsPage />} />
-            <Route path="/uploads" element={<UploadsPage />} />
-            <Route path="/stock-movements" element={<StockMovementsPage />} />
-            <Route path="/adjustments" element={<AdjustmentsPage />} />
-            <Route path="/supplier-manifests" element={<SupplierManifestsPage />} />
-            <Route path="/returns" element={<ReturnsPage />} />
-            <Route path="/exceptions" element={<ExceptionsPage />} />
-            <Route path="/exports" element={<ExportsPage />} />
-            <Route path="*" element={<NotFound />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route
+              path="/*"
+              element={
+                <ProtectedRoute>
+                  <AppLayout>
+                    <Routes>
+                      <Route path="/" element={<Dashboard />} />
+                      <Route path="/orders" element={<OrdersPage />} />
+                      <Route path="/orders/:orderId" element={<OrderDetailPage />} />
+                      <Route path="/inventory" element={<InventoryPage />} />
+                      <Route path="/shipments" element={<ShipmentsPage />} />
+                      <Route path="/uploads" element={<UploadsPage />} />
+                      <Route path="/stock-movements" element={<StockMovementsPage />} />
+                      <Route path="/adjustments" element={<AdjustmentsPage />} />
+                      <Route path="/supplier-manifests" element={<SupplierManifestsPage />} />
+                      <Route path="/returns" element={<ReturnsPage />} />
+                      <Route path="/exceptions" element={<ExceptionsPage />} />
+                      <Route path="/exports" element={<ExportsPage />} />
+                      <Route path="*" element={<NotFound />} />
+                    </Routes>
+                  </AppLayout>
+                </ProtectedRoute>
+              }
+            />
           </Routes>
-        </AppLayout>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
