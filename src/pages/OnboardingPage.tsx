@@ -6,17 +6,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, Building2, MapPin, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
+import { Package, Building2, MapPin, CheckCircle2, ArrowRight, Loader2, Plus, X } from "lucide-react";
 
-const DEFAULT_LOCATIONS = [
-  { name: "Main Warehouse", code: "WH-MAIN", location_type: "warehouse" },
-  { name: "Returns Bay", code: "WH-RETURNS", location_type: "returns" },
-  { name: "Quarantine", code: "WH-QUARANTINE", location_type: "quarantine" },
-  { name: "Inspection", code: "WH-INSPECT", location_type: "inspection" },
-  { name: "Damaged Goods", code: "WH-DAMAGED", location_type: "damaged" },
-];
+const MAX_LOCATIONS = 5;
 
 type Step = "company" | "locations" | "done";
+
+interface LocationEntry {
+  name: string;
+  code: string;
+  isPrimary: boolean;
+}
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -28,32 +28,38 @@ export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
 
-  // Locations
-  const [locations, setLocations] = useState(
-    DEFAULT_LOCATIONS.map(l => ({ ...l, enabled: true }))
-  );
-  const [customLocName, setCustomLocName] = useState("");
-  const [customLocCode, setCustomLocCode] = useState("");
+  // Locations — start with one primary location
+  const [locations, setLocations] = useState<LocationEntry[]>([
+    { name: "Primary Location", code: "LOC-01", isPrimary: true },
+  ]);
 
   const handleCompanySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStep("locations");
   };
 
-  const toggleLocation = (index: number) => {
-    setLocations(prev => prev.map((l, i) => i === index ? { ...l, enabled: !l.enabled } : l));
+  const updateLocation = (index: number, field: "name" | "code", value: string) => {
+    setLocations(prev =>
+      prev.map((loc, i) =>
+        i === index
+          ? { ...loc, [field]: field === "code" ? value.toUpperCase().replace(/[^A-Z0-9-]/g, "") : value }
+          : loc
+      )
+    );
   };
 
-  const addCustomLocation = () => {
-    if (!customLocName.trim() || !customLocCode.trim()) return;
-    setLocations(prev => [...prev, {
-      name: customLocName.trim(),
-      code: customLocCode.trim().toUpperCase(),
-      location_type: "other",
-      enabled: true,
-    }]);
-    setCustomLocName("");
-    setCustomLocCode("");
+  const addLocation = () => {
+    if (locations.length >= MAX_LOCATIONS) return;
+    const nextNum = locations.length + 1;
+    setLocations(prev => [
+      ...prev,
+      { name: "", code: `LOC-0${nextNum}`, isPrimary: false },
+    ]);
+  };
+
+  const removeLocation = (index: number) => {
+    if (locations[index].isPrimary) return;
+    setLocations(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleFinish = async () => {
@@ -78,16 +84,16 @@ export default function OnboardingPage() {
 
       if (linkError) throw linkError;
 
-      // 3. Create enabled stock locations
-      const enabledLocations = locations.filter(l => l.enabled);
-      if (enabledLocations.length > 0) {
+      // 3. Create stock locations
+      const validLocations = locations.filter(l => l.name.trim() && l.code.trim());
+      if (validLocations.length > 0) {
         const { error: locError } = await db
           .from("stock_locations")
-          .insert(enabledLocations.map(l => ({
+          .insert(validLocations.map(l => ({
             company_id: companyId,
-            name: l.name,
-            code: l.code,
-            location_type: l.location_type,
+            name: l.name.trim(),
+            code: l.code.trim(),
+            location_type: "warehouse",
           })));
 
         if (locError) throw locError;
@@ -198,64 +204,70 @@ export default function OnboardingPage() {
                 Stock Locations
               </CardTitle>
               <CardDescription className="text-muted-foreground">
-                These locations define where inventory can exist. Toggle off any you don't need, or add custom ones.
+                Define where your inventory lives. You can add up to {MAX_LOCATIONS} locations.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {locations.map((loc, i) => (
-                  <button
+                  <div
                     key={i}
-                    type="button"
-                    onClick={() => toggleLocation(i)}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-md border text-sm transition-colors ${
-                      loc.enabled
-                        ? "border-primary/50 bg-primary/5 text-foreground"
-                        : "border-border bg-card text-muted-foreground opacity-50"
-                    }`}
+                    className="rounded-md border border-border bg-muted/30 p-4 space-y-3"
                   >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border flex items-center justify-center ${
-                        loc.enabled ? "bg-primary border-primary" : "border-border"
-                      }`}>
-                        {loc.enabled && <CheckCircle2 className="w-3.5 h-3.5 text-primary-foreground" />}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                        {loc.isPrimary ? "Primary Location" : `Location ${i + 1}`}
+                      </span>
+                      {!loc.isPrimary && (
+                        <button
+                          type="button"
+                          onClick={() => removeLocation(i)}
+                          className="text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex gap-3">
+                      <div className="flex-1 space-y-1">
+                        <Label className="text-xs">Name</Label>
+                        <Input
+                          placeholder="e.g. Main Warehouse"
+                          value={loc.name}
+                          onChange={e => updateLocation(i, "name", e.target.value)}
+                        />
                       </div>
-                      <div className="text-left">
-                        <p className="font-medium">{loc.name}</p>
-                        <p className="text-xs text-muted-foreground font-mono">{loc.code} · {loc.location_type}</p>
+                      <div className="w-32 space-y-1">
+                        <Label className="text-xs">Code</Label>
+                        <Input
+                          placeholder="LOC-01"
+                          value={loc.code}
+                          onChange={e => updateLocation(i, "code", e.target.value)}
+                          maxLength={15}
+                          className="font-mono"
+                        />
                       </div>
                     </div>
-                  </button>
+                  </div>
                 ))}
               </div>
 
-              {/* Add custom location */}
-              <div className="border-t border-border pt-4">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Add Custom Location</p>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Location name"
-                    value={customLocName}
-                    onChange={e => setCustomLocName(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Input
-                    placeholder="Code"
-                    value={customLocCode}
-                    onChange={e => setCustomLocCode(e.target.value.toUpperCase().replace(/[^A-Z0-9-]/g, ''))}
-                    className="w-32"
-                    maxLength={15}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={addCustomLocation}
-                    disabled={!customLocName.trim() || !customLocCode.trim()}
-                  >
-                    Add
-                  </Button>
-                </div>
-              </div>
+              {locations.length < MAX_LOCATIONS && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addLocation}
+                  className="w-full border-dashed"
+                >
+                  <Plus className="w-4 h-4" /> Add Location
+                </Button>
+              )}
+
+              {locations.length >= MAX_LOCATIONS && (
+                <p className="text-xs text-muted-foreground text-center">
+                  Maximum of {MAX_LOCATIONS} locations reached.
+                </p>
+              )}
 
               <div className="flex gap-3 pt-2">
                 <Button variant="outline" onClick={() => setStep("company")} className="flex-1">
@@ -263,7 +275,7 @@ export default function OnboardingPage() {
                 </Button>
                 <Button
                   onClick={handleFinish}
-                  disabled={loading || locations.filter(l => l.enabled).length === 0}
+                  disabled={loading || !locations.some(l => l.name.trim() && l.code.trim())}
                   className="flex-1"
                 >
                   {loading ? (
@@ -287,7 +299,7 @@ export default function OnboardingPage() {
               <CardTitle className="text-xl text-foreground">You're all set!</CardTitle>
               <CardDescription className="text-muted-foreground">
                 <strong className="text-foreground">{companyName}</strong> has been created with{" "}
-                {locations.filter(l => l.enabled).length} stock locations. Redirecting to your dashboard…
+                {locations.filter(l => l.name.trim() && l.code.trim()).length} stock location{locations.filter(l => l.name.trim() && l.code.trim()).length !== 1 ? "s" : ""}. Redirecting to your dashboard…
               </CardDescription>
               <Loader2 className="w-5 h-5 animate-spin text-primary mx-auto" />
             </CardHeader>
