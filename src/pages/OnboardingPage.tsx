@@ -8,15 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Package, Building2, MapPin, CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 
-const DEFAULT_LOCATIONS = [
-  { name: "Main Warehouse", code: "WH-MAIN", location_type: "warehouse" },
-  { name: "Returns Bay", code: "WH-RETURNS", location_type: "returns" },
-  { name: "Quarantine", code: "WH-QUARANTINE", location_type: "quarantine" },
-  { name: "Inspection", code: "WH-INSPECT", location_type: "inspection" },
-  { name: "Damaged Goods", code: "WH-DAMAGED", location_type: "damaged" },
-];
+const MAX_LOCATIONS = 5;
 
 type Step = "company" | "locations" | "done";
+
+interface LocationEntry {
+  name: string;
+  code: string;
+  isPrimary: boolean;
+}
 
 export default function OnboardingPage() {
   const { user } = useAuth();
@@ -28,32 +28,38 @@ export default function OnboardingPage() {
   const [companyName, setCompanyName] = useState("");
   const [companyCode, setCompanyCode] = useState("");
 
-  // Locations
-  const [locations, setLocations] = useState(
-    DEFAULT_LOCATIONS.map(l => ({ ...l, enabled: true }))
-  );
-  const [customLocName, setCustomLocName] = useState("");
-  const [customLocCode, setCustomLocCode] = useState("");
+  // Locations — start with one primary location
+  const [locations, setLocations] = useState<LocationEntry[]>([
+    { name: "Primary Location", code: "LOC-01", isPrimary: true },
+  ]);
 
   const handleCompanySubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setStep("locations");
   };
 
-  const toggleLocation = (index: number) => {
-    setLocations(prev => prev.map((l, i) => i === index ? { ...l, enabled: !l.enabled } : l));
+  const updateLocation = (index: number, field: "name" | "code", value: string) => {
+    setLocations(prev =>
+      prev.map((loc, i) =>
+        i === index
+          ? { ...loc, [field]: field === "code" ? value.toUpperCase().replace(/[^A-Z0-9-]/g, "") : value }
+          : loc
+      )
+    );
   };
 
-  const addCustomLocation = () => {
-    if (!customLocName.trim() || !customLocCode.trim()) return;
-    setLocations(prev => [...prev, {
-      name: customLocName.trim(),
-      code: customLocCode.trim().toUpperCase(),
-      location_type: "other",
-      enabled: true,
-    }]);
-    setCustomLocName("");
-    setCustomLocCode("");
+  const addLocation = () => {
+    if (locations.length >= MAX_LOCATIONS) return;
+    const nextNum = locations.length + 1;
+    setLocations(prev => [
+      ...prev,
+      { name: "", code: `LOC-0${nextNum}`, isPrimary: false },
+    ]);
+  };
+
+  const removeLocation = (index: number) => {
+    if (locations[index].isPrimary) return;
+    setLocations(prev => prev.filter((_, i) => i !== index));
   };
 
   const handleFinish = async () => {
