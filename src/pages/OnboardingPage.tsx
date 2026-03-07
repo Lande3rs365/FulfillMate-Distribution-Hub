@@ -62,20 +62,19 @@ export default function OnboardingPage() {
 
     try {
       const db = supabase as any;
+      const companyId = crypto.randomUUID();
 
       // 1. Create company
-      const { data: company, error: companyError } = await db
+      const { error: companyError } = await db
         .from("companies")
-        .insert({ name: companyName.trim(), code: companyCode.trim().toUpperCase() })
-        .select()
-        .single();
+        .insert({ id: companyId, name: companyName.trim(), code: companyCode.trim().toUpperCase() });
 
       if (companyError) throw companyError;
 
       // 2. Link user to company
       const { error: linkError } = await db
         .from("user_companies")
-        .insert({ user_id: user.id, company_id: company.id, role: "owner" });
+        .insert({ user_id: user.id, company_id: companyId, role: "owner" });
 
       if (linkError) throw linkError;
 
@@ -85,7 +84,7 @@ export default function OnboardingPage() {
         const { error: locError } = await db
           .from("stock_locations")
           .insert(enabledLocations.map(l => ({
-            company_id: company.id,
+            company_id: companyId,
             name: l.name,
             code: l.code,
             location_type: l.location_type,
@@ -95,7 +94,7 @@ export default function OnboardingPage() {
       }
 
       // 4. Set as current company in context
-      setCurrentCompany(company);
+      setCurrentCompany({ id: companyId, name: companyName.trim(), code: companyCode.trim().toUpperCase(), created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
       setStep("done");
 
       // 5. Redirect after a moment
