@@ -30,6 +30,7 @@ export default function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { user, signOut } = useAuth();
+  const { companies, currentCompany, setCurrentCompany } = useCompany();
 
   const displayName = user?.user_metadata?.full_name || user?.email || "User";
   const avatarUrl = user?.user_metadata?.avatar_url;
