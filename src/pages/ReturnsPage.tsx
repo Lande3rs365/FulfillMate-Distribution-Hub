@@ -309,19 +309,6 @@ export default function ReturnsPage() {
                         <p className="text-sm text-foreground mt-1">{notes}</p>
                       </div>
                     )}
-                    {attachments.length > 0 && (
-                      <div className="pt-2 border-t border-border">
-                        <span className="text-xs text-muted-foreground">Attachments</span>
-                        <div className="flex gap-2 mt-2">
-                          {attachments.map((att, i) => (
-                            <div key={i} className="w-14 h-14 rounded border border-border overflow-hidden">
-                              {att.type === 'image' ? (
-                                <img src={att.preview} alt={`Attachment ${i + 1}`} className="w-full h-full object-cover" />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-muted/30">
-                                  <Camera className="w-4 h-4 text-muted-foreground" />
-                                </div>
-                              )}
                             </div>
                           ))}
                         </div>
