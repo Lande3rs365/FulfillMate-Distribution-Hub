@@ -11,6 +11,8 @@ import ShipmentsPage from "@/pages/ShipmentsPage";
 import UploadsPage from "@/pages/UploadsPage";
 import ExceptionsPage from "@/pages/ExceptionsPage";
 import ExportsPage from "@/pages/ExportsPage";
+import StockMovementsPage from "@/pages/StockMovementsPage";
+import AdjustmentsPage from "@/pages/AdjustmentsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
