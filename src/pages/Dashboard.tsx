@@ -78,6 +78,25 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* Supplier Inbound */}
+      <div className="bg-card border border-border rounded-lg p-5">
+        <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
+          <Ship className="w-4 h-4 text-info" />
+          Supplier Inbound
+        </h2>
+        <div className="space-y-2">
+          {mockSupplierManifests.map(m => (
+            <div key={m.manifestId} className="flex items-center justify-between p-3 rounded-md bg-muted/30 border border-border/50">
+              <div>
+                <p className="text-sm font-medium text-foreground">{m.supplierName}</p>
+                <p className="text-xs text-muted-foreground font-mono">{m.manifestId} · {m.rows.map(r => r.sku).join(', ')}</p>
+              </div>
+              <StatusBadge status={m.inboundStatus} />
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* Exceptions */}
       <div className="bg-card border border-border rounded-lg p-5">
         <h2 className="text-sm font-semibold mb-4 flex items-center gap-2">
