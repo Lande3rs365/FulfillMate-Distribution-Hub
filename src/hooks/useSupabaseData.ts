@@ -303,6 +303,7 @@ export function useDashboardStats() {
         recentMovements: movementList,
         manifests: manifestList,
         todayProcessing: todayProcessing.data || [],
+        shippingAlerts: shippingAlerts.data || [],
         allOrders: orderList,
         allShipments: shipmentList,
       };
