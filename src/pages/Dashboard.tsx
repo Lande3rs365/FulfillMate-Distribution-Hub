@@ -7,7 +7,7 @@ import { useDashboardStats } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
 import {
   Package, Truck, Warehouse, AlertTriangle,
-  BarChart3, Ship, Clock, ArrowRight,
+  BarChart3, Ship, Clock, ArrowRight, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -16,11 +16,28 @@ import { startOfWeek, startOfMonth, isAfter, format } from "date-fns";
 
 type Period = "week" | "month" | "all";
 
+const PAGE_SIZE = 10;
+
+const Paginator = ({ page, totalPages, onPrev, onNext }: { page: number; totalPages: number; onPrev: () => void; onNext: () => void }) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-3">
+      <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+      <div className="flex items-center gap-1">
+        <button onClick={onPrev} disabled={page <= 1} className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
+        <button onClick={onNext} disabled={page >= totalPages} className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentCompany, loading: companyLoading } = useCompany();
   const { data: stats, isLoading } = useDashboardStats();
   const [period, setPeriod] = useState<Period>("week");
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [exceptionsPage, setExceptionsPage] = useState(1);
 
   if (companyLoading || isLoading) return <div className="p-6"><LoadingSpinner message="Loading dashboard..." /></div>;
 
@@ -158,30 +175,38 @@ export default function Dashboard() {
         {(stats?.todayProcessing || []).length === 0 ? (
           <p className="text-xs text-muted-foreground">No processing orders today</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                  <th className="text-left py-2 px-3">Order</th>
-                  <th className="text-left py-2 px-3">Customer</th>
-                  <th className="text-left py-2 px-3">Date</th>
-                  <th className="text-left py-2 px-3">Woo Status</th>
-                  <th className="text-right py-2 px-3">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats!.todayProcessing.map((o: any) => (
-                  <tr key={o.id} onClick={() => navigate(`/orders/${o.order_number}`)} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
-                    <td className="py-2 px-3 font-mono text-primary font-medium">{o.order_number}</td>
-                    <td className="py-2 px-3 text-foreground">{o.customer_name || '—'}</td>
-                    <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{o.order_date ? format(new Date(o.order_date), 'dd MMM') : '—'}</td>
-                    <td className="py-2 px-3"><StatusBadge status={o.woo_status || 'processing'} /></td>
-                    <td className="py-2 px-3 font-mono text-xs text-right">{o.total_amount ? `$${Number(o.total_amount).toFixed(2)}` : '—'}</td>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                    <th className="text-left py-2 px-3">Order</th>
+                    <th className="text-left py-2 px-3">Customer</th>
+                    <th className="text-left py-2 px-3">Date</th>
+                    <th className="text-left py-2 px-3">Woo Status</th>
+                    <th className="text-right py-2 px-3">Total</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                </thead>
+                <tbody>
+                  {stats!.todayProcessing.slice((ordersPage - 1) * PAGE_SIZE, ordersPage * PAGE_SIZE).map((o: any) => (
+                    <tr key={o.id} onClick={() => navigate(`/orders/${o.order_number}`)} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
+                      <td className="py-2 px-3 font-mono text-primary font-medium">{o.order_number}</td>
+                      <td className="py-2 px-3 text-foreground">{o.customer_name || '—'}</td>
+                      <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{o.order_date ? format(new Date(o.order_date), 'dd MMM') : '—'}</td>
+                      <td className="py-2 px-3"><StatusBadge status={o.woo_status || 'processing'} /></td>
+                      <td className="py-2 px-3 font-mono text-xs text-right">{o.total_amount ? `$${Number(o.total_amount).toFixed(2)}` : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <Paginator
+              page={ordersPage}
+              totalPages={Math.ceil((stats?.todayProcessing || []).length / PAGE_SIZE)}
+              onPrev={() => setOrdersPage(p => Math.max(1, p - 1))}
+              onNext={() => setOrdersPage(p => Math.min(Math.ceil((stats?.todayProcessing || []).length / PAGE_SIZE), p + 1))}
+            />
+          </>
         )}
       </div>
 
@@ -212,12 +237,12 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* Active Exceptions — 10 Oldest */}
+      {/* Active Exceptions */}
       <div className="bg-card border border-border rounded-lg p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-destructive" />
-            Active Exceptions — Top 10 Oldest
+            Active Exceptions
             <span className="text-xs font-normal text-muted-foreground">({stats?.exceptions || 0} total open)</span>
           </h2>
           <button onClick={() => navigate('/exceptions')} className="text-xs text-primary hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
@@ -225,33 +250,41 @@ export default function Dashboard() {
         {(stats?.oldestExceptions || []).length === 0 ? (
           <p className="text-xs text-muted-foreground">No active exceptions 🎉</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                  <th className="text-left py-2 px-3">Order</th>
-                  <th className="text-left py-2 px-3">Customer</th>
-                  <th className="text-left py-2 px-3">Order Date</th>
-                  <th className="text-left py-2 px-3">Reason</th>
-                  <th className="text-left py-2 px-3">Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats!.oldestExceptions.map((exc: any) => {
-                  const order = exc.orders;
-                  return (
-                    <tr key={exc.id} onClick={() => navigate('/exceptions')} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
-                      <td className="py-2 px-3 font-mono text-primary font-medium">{order?.order_number || '—'}</td>
-                      <td className="py-2 px-3 text-foreground">{order?.customer_name || '—'}</td>
-                      <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{order?.order_date ? format(new Date(order.order_date), 'dd MMM yyyy') : '—'}</td>
-                      <td className="py-2 px-3">{exc.reason ? <StatusBadge status={exc.reason} /> : <span className="text-xs text-muted-foreground">—</span>}</td>
-                      <td className="py-2 px-3"><StatusBadge status={exc.status} /></td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                    <th className="text-left py-2 px-3">Order</th>
+                    <th className="text-left py-2 px-3">Customer</th>
+                    <th className="text-left py-2 px-3">Order Date</th>
+                    <th className="text-left py-2 px-3">Reason</th>
+                    <th className="text-left py-2 px-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats!.oldestExceptions.slice((exceptionsPage - 1) * PAGE_SIZE, exceptionsPage * PAGE_SIZE).map((exc: any) => {
+                    const order = exc.orders;
+                    return (
+                      <tr key={exc.id} onClick={() => navigate('/exceptions')} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
+                        <td className="py-2 px-3 font-mono text-primary font-medium">{order?.order_number || '—'}</td>
+                        <td className="py-2 px-3 text-foreground">{order?.customer_name || '—'}</td>
+                        <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{order?.order_date ? format(new Date(order.order_date), 'dd MMM yyyy') : '—'}</td>
+                        <td className="py-2 px-3">{exc.reason ? <StatusBadge status={exc.reason} /> : <span className="text-xs text-muted-foreground">—</span>}</td>
+                        <td className="py-2 px-3"><StatusBadge status={exc.status} /></td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Paginator
+              page={exceptionsPage}
+              totalPages={Math.ceil((stats?.oldestExceptions || []).length / PAGE_SIZE)}
+              onPrev={() => setExceptionsPage(p => Math.max(1, p - 1))}
+              onNext={() => setExceptionsPage(p => Math.min(Math.ceil((stats?.oldestExceptions || []).length / PAGE_SIZE), p + 1))}
+            />
+          </>
         )}
       </div>
     </div>
