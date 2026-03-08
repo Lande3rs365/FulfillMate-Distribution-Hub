@@ -125,9 +125,11 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       });
 
       processed++;
+      onProgress?.(processed, errors);
     } catch (err) {
       console.error(`Error importing order ${order.order_number}:`, err);
       errors++;
+      onProgress?.(processed, errors);
     }
   }
   return { processed, errors };
