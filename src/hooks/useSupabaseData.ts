@@ -250,7 +250,7 @@ export function useDashboardStats() {
       todayStart.setHours(0, 0, 0, 0);
       const todayISO = todayStart.toISOString();
 
-      const [orders, shipments, products, inventory, exceptions, movements, manifests, todayProcessing, todayShipments, oldestExceptions] = await Promise.all([
+      const [orders, shipments, products, inventory, exceptions, movements, manifests, todayProcessing, todayShipments, oldestExceptions, shippingAlerts] = await Promise.all([
         db.from('orders').select('id, status, order_date, created_at').eq('company_id', cid),
         db.from('shipments').select('id, status, shipped_date, created_at').eq('company_id', cid),
         db.from('returns').select('id', { count: 'exact' }).eq('company_id', cid).in('status', ['initiated', 'received']),
@@ -264,6 +264,8 @@ export function useDashboardStats() {
         db.from('shipments').select('id').eq('company_id', cid).gte('created_at', todayISO),
         // Oldest open exceptions with linked order info
         db.from('exceptions').select('*, orders:linked_order_id(order_number, customer_name, order_date)').eq('company_id', cid).eq('status', 'open').order('created_at', { ascending: true }).limit(50),
+        // Shipping urgent alerts — shipments with problematic carrier statuses
+        db.from('shipments').select('*, orders:order_id(order_number, customer_name, order_date)').eq('company_id', cid).not('status', 'in', '("delivered","in_transit","label_created")').order('shipped_date', { ascending: true }).limit(50),
       ]);
 
       const orderList = orders.data || [];
