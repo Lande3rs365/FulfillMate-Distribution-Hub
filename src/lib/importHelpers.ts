@@ -159,6 +159,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       } else {
         // No order number — skip or create placeholder
         processed++;
+        onProgress?.(processed, errors);
         continue;
       }
 
