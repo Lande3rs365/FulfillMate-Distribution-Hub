@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EmptyState from "@/components/EmptyState";
 import KpiCard from "@/components/KpiCard";
-import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown, Package, Minus, Layers } from "lucide-react";
+import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown, Package, Minus, Layers, Crosshair, Swords, Briefcase, Gem, Shirt, LayoutGrid } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -127,9 +127,12 @@ export default function ProductsPage() {
   // KPI counts
   const counts = useMemo(() => ({
     total: products.length,
-    parents: products.filter(p => p.row_type === 'parent').length,
-    variants: products.filter(p => p.row_type === 'variant').length,
-    standalone: products.filter(p => p.row_type === 'standalone').length,
+    shafts: products.filter(p => p.category === 'shaft').length,
+    playingCues: products.filter(p => p.category === 'playing_cue').length,
+    breakJump: products.filter(p => ['break_cue', 'jump_cue', 'break_jump'].includes(p.category || '')).length,
+    cases: products.filter(p => p.category === 'case').length,
+    accessories: products.filter(p => p.category === 'accessory').length,
+    apparel: products.filter(p => p.category === 'apparel').length,
   }), [products]);
 
   // Get filtered products for current tab
@@ -411,11 +414,15 @@ export default function ProductsPage() {
       </div>
 
       {/* KPI row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard title="Total SKUs" value={counts.total} icon={Tag} variant="info" />
-        <KpiCard title="Parents" value={counts.parents} icon={Package} variant="default" />
-        <KpiCard title="Variants" value={counts.variants} icon={Layers} variant="warning" />
-        <KpiCard title="Standalone" value={counts.standalone} icon={Minus} variant="success" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+        <KpiCard title="All SKUs" value={counts.total} icon={LayoutGrid} variant="info" />
+        <KpiCard title="Shafts" value={counts.shafts} icon={Crosshair} variant="warning" />
+        <KpiCard title="Playing Cues" value={counts.playingCues} icon={Swords} variant="success" />
+        <KpiCard title="Break & Jump" value={counts.breakJump} icon={Layers} variant="danger" />
+        <KpiCard title="Cases" value={counts.cases} icon={Briefcase} variant="default" />
+        <KpiCard title="Accessories" value={counts.accessories} icon={Gem} variant="info" />
+        <KpiCard title="Apparel" value={counts.apparel} icon={Shirt} variant="warning" />
+        <KpiCard title="Categories" value={Object.keys(productsByCategory).length} icon={Tag} variant="success" />
       </div>
 
       {/* Filter chips + action buttons */}
