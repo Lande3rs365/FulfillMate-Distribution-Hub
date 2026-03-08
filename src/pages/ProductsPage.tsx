@@ -296,6 +296,7 @@ export default function ProductsPage() {
 
   const renderHierarchicalTable = (tab: TabConfig, items: Product[]) => {
     const parents = items.filter(p => p.row_type === 'parent');
+    const standalones = items.filter(p => p.row_type === 'standalone');
     const variants = items.filter(p => p.row_type === 'variant');
     const variantsByParent = new Map<string, Product[]>();
     const orphans: Product[] = [];
@@ -339,6 +340,13 @@ export default function ProductsPage() {
                   />
                 );
               })}
+              {standalones.map(p => (
+                <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td className="px-2 py-3 text-center"><Minus className="w-3 h-3 text-muted-foreground/40" /></td>
+                  {renderRowCells(p, tab)}
+                  <td className="py-3 px-4 text-center">{renderActions(p)}</td>
+                </tr>
+              ))}
               {orphans.map(p => (
                 <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                   <td></td>
