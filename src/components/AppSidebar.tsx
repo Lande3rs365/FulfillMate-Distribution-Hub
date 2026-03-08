@@ -21,6 +21,7 @@ const navItems = [
   { to: "/shipments", icon: Truck, label: "Shipments" },
   { to: "/returns", icon: RotateCcw, label: "Returns" },
   { to: "/supplier-manifests", icon: Ship, label: "Manufacturer Inbound" },
+  { to: "/products", icon: Tag, label: "Products" },
   { to: "/inventory", icon: Warehouse, label: "Inventory" },
   { to: "/stock-movements", icon: ArrowRightLeft, label: "Stock Ledger" },
   { to: "/uploads", icon: Upload, label: "Data Intake" },

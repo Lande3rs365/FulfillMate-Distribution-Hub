@@ -73,6 +73,7 @@ const App = () => (
                           <Route path="/supplier-manifests" element={<SupplierManifestsPage />} />
                           <Route path="/returns" element={<ReturnsPage />} />
                           <Route path="/exceptions" element={<ExceptionsPage />} />
+                          <Route path="/products" element={<ProductsPage />} />
                           <Route path="/exports" element={<ExportsPage />} />
                           <Route path="*" element={<NotFound />} />
                         </Routes>
