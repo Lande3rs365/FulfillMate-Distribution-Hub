@@ -805,6 +805,7 @@ export type Database = {
       shipments: {
         Row: {
           carrier: string | null
+          carrier_status_detail: string | null
           company_id: string
           created_at: string
           delivered_date: string | null
@@ -820,6 +821,7 @@ export type Database = {
         }
         Insert: {
           carrier?: string | null
+          carrier_status_detail?: string | null
           company_id: string
           created_at?: string
           delivered_date?: string | null
@@ -835,6 +837,7 @@ export type Database = {
         }
         Update: {
           carrier?: string | null
+          carrier_status_detail?: string | null
           company_id?: string
           created_at?: string
           delivered_date?: string | null

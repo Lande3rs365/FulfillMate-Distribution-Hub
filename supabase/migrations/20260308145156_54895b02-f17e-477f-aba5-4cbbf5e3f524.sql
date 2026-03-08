@@ -1,0 +1,1 @@
+ALTER TABLE public.shipments ADD COLUMN carrier_status_detail text DEFAULT NULL;
