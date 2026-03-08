@@ -67,7 +67,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'accessories', label: 'Accessories', categories: ['accessory'], hierarchical: false,
+    key: 'accessories', label: 'Accessories', categories: ['accessory'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
