@@ -197,7 +197,8 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       description: "Order updated via WooCommerce CSV import", created_by: userId,
     })).filter(e => e.order_id);
     if (eventRows.length > 0) {
-      await db.from("order_events").insert(eventRows).catch(() => {});
+      const { error: evtErr } = await db.from("order_events").insert(eventRows);
+      if (evtErr) console.error("Event insert error:", evtErr);
     }
 
     onProgress?.(totalProcessed, totalErrors);
@@ -403,7 +404,8 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
     description: `Order via Master XLSX import`, created_by: userId,
   })).filter(e => e.order_id);
   for (let i = 0; i < allEvents.length; i += BATCH_SIZE) {
-    await db.from("order_events").insert(allEvents.slice(i, i + BATCH_SIZE)).catch(() => {});
+    const { error: evtErr } = await db.from("order_events").insert(allEvents.slice(i, i + BATCH_SIZE));
+    if (evtErr) console.error("Event insert error:", evtErr);
   }
 
   // 6. Handle on-hold exceptions
@@ -455,6 +457,7 @@ async function createOnHoldExceptions(
     }));
 
   for (let i = 0; i < toCreate.length; i += BATCH_SIZE) {
-    await db.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE)).catch(() => {});
+    const { error: excErr } = await db.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE));
+    if (excErr) console.error("Exception insert error:", excErr);
   }
 }
