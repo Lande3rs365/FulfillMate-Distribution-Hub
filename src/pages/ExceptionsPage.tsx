@@ -250,14 +250,13 @@ export default function ExceptionsPage() {
       ) : (
         <div className="space-y-6">
           {/* Column headers */}
-          <div className="grid grid-cols-[minmax(180px,1fr)_90px_120px_120px_120px_auto_120px] items-center gap-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+          <div className="grid grid-cols-[minmax(180px,1fr)_90px_90px_140px_120px_90px] items-center gap-3 px-4 text-xs font-medium text-muted-foreground uppercase tracking-wider">
             <span>Order</span>
-            <span>Order Date</span>
+            <span>Date</span>
             <span>Contacted</span>
             <span>Reason</span>
-            <span></span>
-            <span></span>
             <span>Status</span>
+            <span></span>
           </div>
           {onHold.length > 0 && (
             <div>
