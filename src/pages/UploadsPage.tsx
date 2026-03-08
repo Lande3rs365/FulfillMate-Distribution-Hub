@@ -139,14 +139,18 @@ export default function UploadsPage() {
     setPending(null);
     setUploading({ fileName, status: "importing", total: preview.totalRows, processed: 0, errors: 0 });
 
+    const onProgress: ProgressCallback = (processed, errors) => {
+      setUploading(prev => prev ? { ...prev, processed, errors } : null);
+    };
+
     try {
       let result = { processed: 0, errors: 0 };
       if (type === "woocommerce") {
-        result = await importWooCommerceOrders(data as ParsedOrder[], currentCompany.id, user.id);
+        result = await importWooCommerceOrders(data as ParsedOrder[], currentCompany.id, user.id, onProgress);
       } else if (type === "shipment") {
-        result = await importShipments(data as ParsedShipment[], currentCompany.id, user.id);
+        result = await importShipments(data as ParsedShipment[], currentCompany.id, user.id, onProgress);
       } else if (type === "master") {
-        result = await importMasterRows(data as ParsedMasterRow[], currentCompany.id, user.id);
+        result = await importMasterRows(data as ParsedMasterRow[], currentCompany.id, user.id, onProgress);
       }
 
       await db.from("data_intake_logs").insert({
