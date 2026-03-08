@@ -611,7 +611,7 @@ function OverviewTab({ productsByCategory }: { productsByCategory: Record<string
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="font-semibold text-foreground">SKU Framework Reference</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">JFlowers SKU structure v4.0 — how product codes are constructed</p>
+          <p className="text-xs text-muted-foreground mt-0.5">JFlowers SKU Framework v3.0 — Dealership Channel — March 2026</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
