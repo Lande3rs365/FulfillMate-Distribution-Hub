@@ -22,12 +22,18 @@ import {
 } from "@/components/ui/dialog";
 
 // ── Map return DB status to standard ticket statuses ──
+// new → on-hold / processing / refunded (when authorised)
 const mapReturnStatus = (status: string | null, stockOutcome: string | null): string => {
   switch (status) {
     case 'initiated': return 'new';
-    case 'approved': return 'processing';
+    case 'approved':
+      if (stockOutcome === 'refund') return 'refunded';
+      if (stockOutcome === 'warranty_review' || stockOutcome === 'quarantine') return 'on-hold';
+      return 'processing';
     case 'received': return 'processing';
-    case 'resolved': return stockOutcome === 'refund' ? 'refunded' : 'completed';
+    case 'resolved':
+      if (stockOutcome === 'refund') return 'refunded';
+      return 'completed';
     case 'rejected': return 'cancelled';
     default: return status?.replace(/_/g, '-') || 'pending';
   }
