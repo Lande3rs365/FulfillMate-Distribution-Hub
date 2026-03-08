@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EmptyState from "@/components/EmptyState";
 import KpiCard from "@/components/KpiCard";
-import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown, Package, Minus, Layers, Crosshair, Swords, Briefcase, Gem, Shirt, LayoutGrid } from "lucide-react";
+import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown, Package, Minus, Layers, Crosshair, Swords, Briefcase, Gem, Shirt, LayoutGrid, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -228,14 +228,21 @@ export default function ProductsPage() {
 
   if (!currentCompany) return <EmptyState icon={Tag} title="No company selected" />;
 
-  // Build filter chips config
-  const filterChips: { key: string; label: string }[] = [
-    { key: 'overview', label: 'Overview' },
-    ...TABS.map(tab => ({
-      key: tab.key,
-      label: `${tab.label} (${getTabProducts(tab).length})`,
-    })),
-  ];
+  const handleDeleteAll = async () => {
+    if (!currentCompany) return;
+    const count = products.length;
+    if (count === 0) { toast.info("No products to delete."); return; }
+    const confirmed = window.confirm(`Delete all ${count} products? This cannot be undone.`);
+    if (!confirmed) return;
+    try {
+      const { error } = await (supabase as any).from("products").delete().eq("company_id", currentCompany.id);
+      if (error) throw error;
+      toast.success(`Deleted ${count} products.`);
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    } catch (err: any) {
+      toast.error("Delete failed: " + (err.message || "Unknown error"));
+    }
+  };
 
   const renderTable = (tab: TabConfig) => {
     const tabProducts = getTabProducts(tab);
@@ -413,66 +420,66 @@ export default function ProductsPage() {
         <p className="text-sm text-muted-foreground">{products.length} products · SKU framework & catalogue management</p>
       </div>
 
-      {/* KPI row */}
+      {/* KPI row — clickable cards navigate to category tabs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <KpiCard title="All SKUs" value={counts.total} icon={LayoutGrid} variant="info" />
-        <KpiCard title="Shafts" value={counts.shafts} icon={Crosshair} variant="warning" />
-        <KpiCard title="Playing Cues" value={counts.playingCues} icon={Swords} variant="success" />
-        <KpiCard title="Break & Jump" value={counts.breakJump} icon={Layers} variant="danger" />
-        <KpiCard title="Cases" value={counts.cases} icon={Briefcase} variant="default" />
-        <KpiCard title="Accessories" value={counts.accessories} icon={Gem} variant="info" />
-        <KpiCard title="Apparel" value={counts.apparel} icon={Shirt} variant="warning" />
-        <KpiCard title="Categories" value={Object.keys(productsByCategory).length} icon={Tag} variant="success" />
-      </div>
-
-      {/* Filter chips + action buttons */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <div className="flex items-center gap-2 flex-wrap">
-          {filterChips.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setActiveFilter(f.key)}
-              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
-                activeFilter === f.key
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'bg-card text-muted-foreground border-border hover:bg-muted'
-              }`}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex items-center gap-2">
+        {[
+          { key: 'all', title: 'All SKUs', value: counts.total, icon: LayoutGrid, variant: 'info' as const },
+          { key: 'shafts', title: 'Shafts', value: counts.shafts, icon: Crosshair, variant: 'warning' as const },
+          { key: 'playing_cues', title: 'Playing Cues', value: counts.playingCues, icon: Swords, variant: 'success' as const },
+          { key: 'break_jump', title: 'Break & Jump', value: counts.breakJump, icon: Layers, variant: 'danger' as const },
+          { key: 'cases', title: 'Cases', value: counts.cases, icon: Briefcase, variant: 'default' as const },
+          { key: 'accessories', title: 'Accessories', value: counts.accessories, icon: Gem, variant: 'info' as const },
+          { key: 'apparel', title: 'Apparel', value: counts.apparel, icon: Shirt, variant: 'warning' as const },
+          { key: 'overview', title: 'Categories', value: Object.keys(productsByCategory).length, icon: Tag, variant: 'success' as const },
+        ].map(card => (
           <button
-            onClick={handleImport}
-            disabled={importMutation.isPending}
-            className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-border bg-card text-muted-foreground hover:bg-muted flex items-center gap-1.5"
+            key={card.key}
+            onClick={() => setActiveFilter(card.key)}
+            className={cn("text-left rounded-lg transition-all", activeFilter === card.key && "ring-2 ring-primary ring-offset-2 ring-offset-background")}
           >
-            <Upload className={cn("w-3.5 h-3.5", importMutation.isPending && "animate-spin")} />
-            Import SKU Framework
+            <KpiCard title={card.title} value={card.value} icon={card.icon} variant={card.variant} />
           </button>
-          {activeFilter !== 'overview' && activeFilter !== 'all' && (
-            <button
-              onClick={() => setAddDialogOpen(true)}
-              className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-primary bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Product
-            </button>
-          )}
-        </div>
+        ))}
       </div>
 
-      {/* Search */}
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search by SKU, name, or details…"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-card border border-border rounded-md pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+      {/* Search + Import on one line */}
+      <div className="flex items-center gap-2">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search by SKU, name, or details…"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-card border border-border rounded-md pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+        <button
+          onClick={handleImport}
+          disabled={importMutation.isPending}
+          className="px-3 py-2 rounded-md text-xs font-medium transition-colors border border-border bg-card text-muted-foreground hover:bg-muted flex items-center gap-1.5 whitespace-nowrap"
+        >
+          <Upload className={cn("w-3.5 h-3.5", importMutation.isPending && "animate-spin")} />
+          Import SKU Framework
+        </button>
+        {products.length > 0 && (
+          <button
+            onClick={handleDeleteAll}
+            className="px-3 py-2 rounded-md text-xs font-medium transition-colors border border-destructive/50 bg-card text-destructive hover:bg-destructive/10 flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Delete All
+          </button>
+        )}
+        {activeFilter !== 'overview' && activeFilter !== 'all' && (
+          <button
+            onClick={() => setAddDialogOpen(true)}
+            className="px-3 py-2 rounded-md text-xs font-medium transition-colors border border-primary bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Add Product
+          </button>
+        )}
       </div>
 
       {/* Content */}
