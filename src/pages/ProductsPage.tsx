@@ -35,7 +35,7 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   {
-    key: 'shafts', label: 'Shafts', categories: ['shaft'], hierarchical: false,
+  key: 'shafts', label: 'Shafts', categories: ['shaft'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Model' },
@@ -51,7 +51,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'break_jump', label: 'Break & Jump', categories: ['break_cue', 'jump_cue', 'break_jump'], hierarchical: false,
+    key: 'break_jump', label: 'Break & Jump', categories: ['break_cue', 'jump_cue', 'break_jump'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
@@ -59,7 +59,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'cases', label: 'Cases', categories: ['case'], hierarchical: false,
+    key: 'cases', label: 'Cases', categories: ['case'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
@@ -67,7 +67,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'accessories', label: 'Accessories', categories: ['accessory'], hierarchical: false,
+    key: 'accessories', label: 'Accessories', categories: ['accessory'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
@@ -83,7 +83,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'all', label: 'All', categories: [], hierarchical: false,
+    key: 'all', label: 'All', categories: [], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
@@ -296,6 +296,7 @@ export default function ProductsPage() {
 
   const renderHierarchicalTable = (tab: TabConfig, items: Product[]) => {
     const parents = items.filter(p => p.row_type === 'parent');
+    const standalones = items.filter(p => p.row_type === 'standalone');
     const variants = items.filter(p => p.row_type === 'variant');
     const variantsByParent = new Map<string, Product[]>();
     const orphans: Product[] = [];
@@ -339,6 +340,13 @@ export default function ProductsPage() {
                   />
                 );
               })}
+              {standalones.map(p => (
+                <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td className="px-2 py-3 text-center"><Minus className="w-3 h-3 text-muted-foreground/40" /></td>
+                  {renderRowCells(p, tab)}
+                  <td className="py-3 px-4 text-center">{renderActions(p)}</td>
+                </tr>
+              ))}
               {orphans.map(p => (
                 <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
                   <td></td>
