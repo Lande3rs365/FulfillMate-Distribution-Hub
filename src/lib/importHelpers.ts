@@ -185,9 +185,11 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
         weight_grams: shipment.weight_grams,
       });
       processed++;
+      onProgress?.(processed, errors);
     } catch (err) {
       console.error(`Error importing shipment for order ${shipment.order_number}:`, err);
       errors++;
+      onProgress?.(processed, errors);
     }
   }
   return { processed, errors };
