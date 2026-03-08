@@ -289,15 +289,15 @@ export default function Dashboard() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
-                    <th className="text-left py-2 px-3">Order</th>
-                    <th className="text-left py-2 px-3">Customer</th>
-                    <th className="text-left py-2 px-3">Order Date</th>
-                    <th className="text-left py-2 px-3">Reason</th>
+                    <SortHeader label="Order" sortKey="orders.order_number" current={exceptionsSort} onSort={toggleSort(setExceptionsSort, setExceptionsPage)} className="text-left" />
+                    <SortHeader label="Customer" sortKey="orders.customer_name" current={exceptionsSort} onSort={toggleSort(setExceptionsSort, setExceptionsPage)} className="text-left" />
+                    <SortHeader label="Order Date" sortKey="orders.order_date" current={exceptionsSort} onSort={toggleSort(setExceptionsSort, setExceptionsPage)} className="text-left" />
+                    <SortHeader label="Reason" sortKey="reason" current={exceptionsSort} onSort={toggleSort(setExceptionsSort, setExceptionsPage)} className="text-left" />
                     <th className="text-left py-2 px-3">Status</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {stats!.oldestExceptions.slice((exceptionsPage - 1) * PAGE_SIZE, exceptionsPage * PAGE_SIZE).map((exc: any) => {
+                  {sortRows(stats!.oldestExceptions, exceptionsSort).slice((exceptionsPage - 1) * PAGE_SIZE, exceptionsPage * PAGE_SIZE).map((exc: any) => {
                     const order = exc.orders;
                     return (
                       <tr key={exc.id} onClick={() => navigate('/exceptions')} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
