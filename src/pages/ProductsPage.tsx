@@ -473,6 +473,16 @@ export default function ProductsPage() {
           <Upload className={cn("w-3.5 h-3.5", importMutation.isPending && "animate-spin")} />
           Import SKU Framework
         </button>
+        {products.length === 0 && (
+          <button
+            onClick={handleImportBundled}
+            disabled={importMutation.isPending}
+            className="px-3 py-2 rounded-md text-xs font-medium transition-colors border border-primary/50 bg-card text-primary hover:bg-primary/10 flex items-center gap-1.5 whitespace-nowrap"
+          >
+            <Package className={cn("w-3.5 h-3.5", importMutation.isPending && "animate-spin")} />
+            Import v5 (Bundled)
+          </button>
+        )}
         {products.length > 0 && (
           <button
             onClick={handleDeleteAll}
