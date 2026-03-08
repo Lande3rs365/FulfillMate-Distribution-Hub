@@ -16,7 +16,7 @@ import type { ParsedOrder, ParsedShipment, ParsedMasterRow } from "@/lib/csvPars
 import {
   previewWooCommerceImport, previewShipmentImport, previewMasterImport,
   importWooCommerceOrders, importShipments, importMasterRows,
-  type ImportPreview,
+  type ImportPreview, type ProgressCallback,
 } from "@/lib/importHelpers";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
