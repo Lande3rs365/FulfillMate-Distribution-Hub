@@ -35,7 +35,7 @@ type TabConfig = {
 
 const TABS: TabConfig[] = [
   {
-    key: 'shafts', label: 'Shafts', categories: ['shaft'], hierarchical: false,
+  key: 'shafts', label: 'Shafts', categories: ['shaft'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Model' },
