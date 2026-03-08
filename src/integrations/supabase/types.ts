@@ -113,6 +113,7 @@ export type Database = {
           linked_order_id: string | null
           linked_return_id: string | null
           linked_shipment_id: string | null
+          reason: string | null
           resolution_notes: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -133,6 +134,7 @@ export type Database = {
           linked_order_id?: string | null
           linked_return_id?: string | null
           linked_shipment_id?: string | null
+          reason?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -153,6 +155,7 @@ export type Database = {
           linked_order_id?: string | null
           linked_return_id?: string | null
           linked_shipment_id?: string | null
+          reason?: string | null
           resolution_notes?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
