@@ -1,0 +1,1 @@
+ALTER TABLE public.exceptions ADD COLUMN IF NOT EXISTS reason text DEFAULT NULL;
