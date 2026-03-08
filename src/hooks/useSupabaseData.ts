@@ -238,55 +238,67 @@ export function useDataIntakeLogs() {
   });
 }
 
-// ── Sync Products from Orders ──
-export function useSyncProducts() {
+// ── Import SKU Framework XLSX ──
+export function useImportSkuFramework() {
   const { currentCompany } = useCompany();
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
+    mutationFn: async (data: ArrayBuffer) => {
+      const { parseSkuFrameworkXlsx, resolveParentSku } = await import("@/lib/skuFrameworkParser");
       const companyId = currentCompany!.id;
+      const parsed = parseSkuFrameworkXlsx(data);
+      if (parsed.length === 0) throw new Error("No products found in the spreadsheet.");
 
-      // Get all unique SKUs from order_items (via orders for this company)
-      const { data: orderItems, error: oiErr } = await db
-        .from('order_items')
-        .select('sku, order_id, orders!inner(company_id)')
-        .eq('orders.company_id', companyId)
-        .not('sku', 'is', null);
-      if (oiErr) throw oiErr;
-
-      const uniqueSkus = [...new Set((orderItems || []).map((oi: any) => oi.sku).filter(Boolean))] as string[];
-      if (uniqueSkus.length === 0) return { created: 0, skus: [] };
-
-      // Get existing product SKUs for this company
+      // Get existing SKUs
       const { data: existing, error: pErr } = await db
-        .from('products')
-        .select('sku')
-        .eq('company_id', companyId);
+        .from('products').select('sku, id').eq('company_id', companyId);
       if (pErr) throw pErr;
+      const existingMap = new Map((existing || []).map((p: any) => [p.sku, p.id]));
 
-      const existingSkus = new Set((existing || []).map((p: any) => p.sku));
-      const missing = uniqueSkus.filter(s => !existingSkus.has(s));
+      const parents = parsed.filter(p => p.row_type === 'parent' || p.row_type === 'standalone');
+      const variants = parsed.filter(p => p.row_type === 'variant');
+      let created = 0;
+      let skipped = 0;
 
-      if (missing.length === 0) return { created: 0, skus: [] };
-
-      // Insert stub products in batches of 100
+      // Pass 1: Insert parents/standalones
       const BATCH = 100;
-      for (let i = 0; i < missing.length; i += BATCH) {
-        const batch = missing.slice(i, i + BATCH).map(sku => ({
-          company_id: companyId,
-          sku,
-          name: sku,
+      const newParents = parents.filter(p => !existingMap.has(p.sku));
+      skipped += parents.length - newParents.length;
+      for (let i = 0; i < newParents.length; i += BATCH) {
+        const batch = newParents.slice(i, i + BATCH).map(p => ({
+          company_id: companyId, sku: p.sku, name: p.name,
+          category: p.category, row_type: p.row_type, description: p.description,
         }));
-        const { error: insErr } = await db.from('products').insert(batch);
-        if (insErr) throw insErr;
+        const { data: inserted, error } = await db.from('products').insert(batch).select('sku, id');
+        if (error) throw error;
+        for (const row of (inserted || [])) existingMap.set(row.sku, row.id);
+        created += batch.length;
       }
 
-      return { created: missing.length, skus: missing };
+      // Pass 2: Insert variants with parent_product_id
+      const newVariants = variants.filter(v => !existingMap.has(v.sku));
+      skipped += variants.length - newVariants.length;
+      for (let i = 0; i < newVariants.length; i += BATCH) {
+        const batch = newVariants.slice(i, i + BATCH).map(v => {
+          const parentSku = resolveParentSku(v.sku, v.category);
+          const parentId = parentSku ? existingMap.get(parentSku) || null : null;
+          return {
+            company_id: companyId, sku: v.sku, name: v.name,
+            category: v.category, row_type: v.row_type, description: v.description,
+            parent_product_id: parentId,
+          };
+        });
+        const { data: inserted, error } = await db.from('products').insert(batch).select('sku, id');
+        if (error) throw error;
+        for (const row of (inserted || [])) existingMap.set(row.sku, row.id);
+        created += batch.length;
+      }
+
+      return { created, skipped };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['products'] });
-      queryClient.invalidateQueries({ queryKey: ['inventory'] });
     },
   });
 }

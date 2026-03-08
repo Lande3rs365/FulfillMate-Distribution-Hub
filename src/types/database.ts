@@ -38,6 +38,9 @@ export interface Product {
   reorder_point: number;
   reorder_qty: number;
   is_active: boolean;
+  category: string | null;
+  parent_product_id: string | null;
+  row_type: string;
   created_at: string;
   updated_at: string;
 }
