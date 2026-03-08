@@ -30,7 +30,10 @@ const mapReturnStatus = (status: string | null, stockOutcome: string | null): st
       if (stockOutcome === 'refund') return 'refunded';
       if (stockOutcome === 'warranty_review' || stockOutcome === 'quarantine') return 'on-hold';
       return 'processing';
-    case 'received': return 'processing';
+    case 'received':
+      if (stockOutcome === 'refund') return 'refunded';
+      if (stockOutcome === 'warranty_review' || stockOutcome === 'quarantine') return 'on-hold';
+      return 'processing';
     case 'resolved':
       if (stockOutcome === 'refund') return 'refunded';
       return 'completed';
