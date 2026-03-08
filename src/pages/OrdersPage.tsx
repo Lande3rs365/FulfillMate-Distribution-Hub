@@ -3,21 +3,97 @@ import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useOrders } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
-import { Package, Search } from "lucide-react";
-import { useState } from "react";
+import { Package, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { cn } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+type SortField = "order_date" | "order_number" | "customer_name";
+type SortDir = "asc" | "desc";
 
 export default function OrdersPage() {
   const [search, setSearch] = useState("");
+  const [wooFilter, setWooFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [sortField, setSortField] = useState<SortField>("order_date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const navigate = useNavigate();
   const { currentCompany } = useCompany();
   const { data: orders = [], isLoading } = useOrders();
 
-  const filtered = orders.filter(o =>
-    o.order_number.toLowerCase().includes(search.toLowerCase()) ||
-    (o.customer_name || '').toLowerCase().includes(search.toLowerCase()) ||
-    (o.customer_email || '').toLowerCase().includes(search.toLowerCase())
-  );
+  const wooStatuses = useMemo(() => {
+    const set = new Set(orders.map(o => o.woo_status).filter(Boolean));
+    return [...set].sort();
+  }, [orders]);
+
+  const statuses = useMemo(() => {
+    const set = new Set(orders.map(o => o.status).filter(Boolean));
+    return [...set].sort();
+  }, [orders]);
+
+  const filtered = useMemo(() => {
+    let result = orders;
+
+    // Text search
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(o =>
+        o.order_number.toLowerCase().includes(q) ||
+        (o.customer_name || '').toLowerCase().includes(q) ||
+        (o.customer_email || '').toLowerCase().includes(q)
+      );
+    }
+
+    // Woo status filter
+    if (wooFilter !== "all") {
+      result = result.filter(o => o.woo_status === wooFilter);
+    }
+
+    // Status filter
+    if (statusFilter !== "all") {
+      result = result.filter(o => o.status === statusFilter);
+    }
+
+    // Sort
+    result = [...result].sort((a, b) => {
+      let cmp = 0;
+      if (sortField === "order_date") {
+        const da = a.order_date ? new Date(a.order_date).getTime() : 0;
+        const db = b.order_date ? new Date(b.order_date).getTime() : 0;
+        cmp = da - db;
+      } else if (sortField === "order_number") {
+        cmp = a.order_number.localeCompare(b.order_number, undefined, { numeric: true });
+      } else if (sortField === "customer_name") {
+        cmp = (a.customer_name || '').localeCompare(b.customer_name || '');
+      }
+      return sortDir === "desc" ? -cmp : cmp;
+    });
+
+    return result;
+  }, [orders, search, wooFilter, statusFilter, sortField, sortDir]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDir(d => d === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortDir(field === "order_date" ? "desc" : "asc");
+    }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="w-3 h-3 ml-1 opacity-40" />;
+    return sortDir === "asc"
+      ? <ArrowUp className="w-3 h-3 ml-1 text-primary" />
+      : <ArrowDown className="w-3 h-3 ml-1 text-primary" />;
+  };
 
   if (!currentCompany) return <EmptyState icon={Package} title="No company selected" description="Create or join a company to view orders." />;
 
@@ -30,28 +106,83 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <input
-          type="text"
-          placeholder="Search orders..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="w-full bg-card border border-border rounded-md pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-        />
+      {/* Filters row */}
+      <div className="flex items-center gap-3 flex-wrap">
+        <div className="relative max-w-xs flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search orders..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="w-full bg-card border border-border rounded-md pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+        </div>
+
+        <Select value={wooFilter} onValueChange={setWooFilter}>
+          <SelectTrigger className="w-[160px] bg-card">
+            <SelectValue placeholder="Woo Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Woo Status</SelectItem>
+            {wooStatuses.map(s => (
+              <SelectItem key={s} value={s!}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <SelectTrigger className="w-[160px] bg-card">
+            <SelectValue placeholder="Status" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Status</SelectItem>
+            {statuses.map(s => (
+              <SelectItem key={s} value={s}>{s}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {(wooFilter !== "all" || statusFilter !== "all" || search) && (
+          <button
+            onClick={() => { setWooFilter("all"); setStatusFilter("all"); setSearch(""); }}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+          >
+            Clear filters
+          </button>
+        )}
+
+        <span className="ml-auto text-xs text-muted-foreground">
+          Showing {filtered.length} of {orders.length}
+        </span>
       </div>
 
       {isLoading ? <LoadingSpinner message="Loading orders..." /> : filtered.length === 0 ? (
-        <EmptyState icon={Package} title="No orders yet" description="Orders will appear here once data is imported." />
+        <EmptyState icon={Package} title="No orders found" description={search || wooFilter !== "all" || statusFilter !== "all" ? "Try adjusting your filters." : "Orders will appear here once data is imported."} />
       ) : (
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-muted/30 text-muted-foreground text-xs uppercase tracking-wider">
-                  <th className="text-left py-3 px-4">Order</th>
-                  <th className="text-left py-3 px-4">Date</th>
-                  <th className="text-left py-3 px-4">Customer</th>
+                  <th
+                    className="text-left py-3 px-4 cursor-pointer hover:text-foreground transition-colors select-none"
+                    onClick={() => toggleSort("order_number")}
+                  >
+                    <span className="flex items-center">Order <SortIcon field="order_number" /></span>
+                  </th>
+                  <th
+                    className="text-left py-3 px-4 cursor-pointer hover:text-foreground transition-colors select-none"
+                    onClick={() => toggleSort("order_date")}
+                  >
+                    <span className="flex items-center">Date <SortIcon field="order_date" /></span>
+                  </th>
+                  <th
+                    className="text-left py-3 px-4 cursor-pointer hover:text-foreground transition-colors select-none"
+                    onClick={() => toggleSort("customer_name")}
+                  >
+                    <span className="flex items-center">Customer <SortIcon field="customer_name" /></span>
+                  </th>
                   <th className="text-left py-3 px-4">Items</th>
                   <th className="text-left py-3 px-4">Woo Status</th>
                   <th className="text-left py-3 px-4">Status</th>
@@ -74,7 +205,7 @@ export default function OrdersPage() {
                       <p className="text-xs text-muted-foreground">{order.customer_email || ''}</p>
                     </td>
                     <td className="py-3 px-4 text-xs text-muted-foreground">
-                      {order.order_items?.map(i => `${i.sku || '?'} ×${i.quantity}`).join(', ') || '—'}
+                      {order.order_items?.map((i: any) => `${i.sku || '?'} ×${i.quantity}`).join(', ') || '—'}
                     </td>
                     <td className="py-3 px-4"><StatusBadge status={order.woo_status || 'processing'} /></td>
                     <td className="py-3 px-4"><StatusBadge status={order.status} /></td>
