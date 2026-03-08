@@ -253,7 +253,7 @@ export function useDashboardStats() {
       const [orders, shipments, products, inventory, exceptions, movements, manifests, todayProcessing, todayShipments, oldestExceptions] = await Promise.all([
         db.from('orders').select('id, status, order_date, created_at').eq('company_id', cid),
         db.from('shipments').select('id, status, shipped_date, created_at').eq('company_id', cid),
-        db.from('products').select('id', { count: 'exact' }).eq('company_id', cid).eq('is_active', true),
+        db.from('returns').select('id', { count: 'exact' }).eq('company_id', cid).in('status', ['initiated', 'received']),
         db.from('inventory').select('*, products(sku, name, reorder_point)').eq('company_id', cid),
         db.from('exceptions').select('*').eq('company_id', cid).eq('status', 'open'),
         db.from('stock_movements').select('*').eq('company_id', cid).order('timestamp', { ascending: false }).limit(20),
