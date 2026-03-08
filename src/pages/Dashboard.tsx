@@ -8,6 +8,7 @@ import { useCompany } from "@/contexts/CompanyContext";
 import {
   Package, Truck, Warehouse, AlertTriangle,
   BarChart3, Ship, Clock, ArrowRight, ChevronLeft, ChevronRight,
+  ArrowUpDown, ArrowUp, ArrowDown,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
