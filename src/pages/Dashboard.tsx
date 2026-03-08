@@ -7,7 +7,7 @@ import { useDashboardStats } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
 import {
   Package, Truck, Warehouse, AlertTriangle,
-  BarChart3, Ship, Clock, ArrowRight,
+  BarChart3, Ship, Clock, ArrowRight, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -16,11 +16,28 @@ import { startOfWeek, startOfMonth, isAfter, format } from "date-fns";
 
 type Period = "week" | "month" | "all";
 
+const PAGE_SIZE = 10;
+
+const Paginator = ({ page, totalPages, onPrev, onNext }: { page: number; totalPages: number; onPrev: () => void; onNext: () => void }) => {
+  if (totalPages <= 1) return null;
+  return (
+    <div className="flex items-center justify-between pt-3 border-t border-border/50 mt-3">
+      <span className="text-xs text-muted-foreground">Page {page} of {totalPages}</span>
+      <div className="flex items-center gap-1">
+        <button onClick={onPrev} disabled={page <= 1} className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ChevronLeft className="w-4 h-4" /></button>
+        <button onClick={onNext} disabled={page >= totalPages} className="p-1 rounded hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"><ChevronRight className="w-4 h-4" /></button>
+      </div>
+    </div>
+  );
+};
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const { currentCompany, loading: companyLoading } = useCompany();
   const { data: stats, isLoading } = useDashboardStats();
   const [period, setPeriod] = useState<Period>("week");
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [exceptionsPage, setExceptionsPage] = useState(1);
 
   if (companyLoading || isLoading) return <div className="p-6"><LoadingSpinner message="Loading dashboard..." /></div>;
 
