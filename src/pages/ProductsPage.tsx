@@ -51,7 +51,7 @@ const TABS: TabConfig[] = [
     ],
   },
   {
-    key: 'break_jump', label: 'Break & Jump', categories: ['break_cue', 'jump_cue', 'break_jump'], hierarchical: false,
+    key: 'break_jump', label: 'Break & Jump', categories: ['break_cue', 'jump_cue', 'break_jump'], hierarchical: true,
     columns: [
       { key: 'sku', label: 'SKU' },
       { key: 'name', label: 'Name' },
