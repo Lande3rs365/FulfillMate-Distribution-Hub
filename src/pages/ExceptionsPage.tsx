@@ -186,10 +186,32 @@ export default function ExceptionsPage() {
 
           {/* Right side: actions */}
           <div className="flex items-center gap-2 shrink-0">
-            {isOnHold && (
-              <Button variant="ghost" size="sm" className="h-7 text-xs text-muted-foreground" onClick={() => handleSnooze(exc.id)}>
-                Snooze 7d
-              </Button>
+            {/* Reason pill / setter */}
+            {reasonMeta ? (
+              <Select onValueChange={(val) => handleReasonChange(exc.id, val)}>
+                <SelectTrigger className="h-7 w-auto border-0 p-0 shadow-none focus:ring-0">
+                  <span className={cn("inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-0.5 rounded-full cursor-pointer", reasonMeta.color)}>
+                    {reasonMeta.label}
+                  </span>
+                </SelectTrigger>
+                <SelectContent>
+                  {REASON_OPTIONS.map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Select onValueChange={(val) => handleReasonChange(exc.id, val)}>
+                <SelectTrigger className="h-7 w-[110px] text-xs border-dashed text-muted-foreground">
+                  <Tag className="w-3 h-3 mr-1 shrink-0" />
+                  <SelectValue placeholder="Set reason" />
+                </SelectTrigger>
+                <SelectContent>
+                  {REASON_OPTIONS.map(r => (
+                    <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             )}
 
             {orderNumber && (
