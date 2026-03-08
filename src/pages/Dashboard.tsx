@@ -63,6 +63,8 @@ export default function Dashboard() {
   const { currentCompany, loading: companyLoading } = useCompany();
   const { data: stats, isLoading } = useDashboardStats();
   const [period, setPeriod] = useState<Period>("week");
+  const [ordersPage, setOrdersPage] = useState(1);
+  const [exceptionsPage, setExceptionsPage] = useState(1);
   const [ordersSort, setOrdersSort] = useState<SortState>({ key: 'order_date', dir: 'asc' });
   const [exceptionsSort, setExceptionsSort] = useState<SortState>({ key: 'orders.order_date', dir: 'asc' });
 
