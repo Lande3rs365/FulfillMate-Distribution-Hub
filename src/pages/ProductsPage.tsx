@@ -451,15 +451,25 @@ export default function ProductsPage() {
           { key: 'accessories', title: 'Accessories', value: counts.accessories, icon: Gem, variant: 'info' as const },
           { key: 'apparel', title: 'Apparel', value: counts.apparel, icon: Shirt, variant: 'warning' as const },
           { key: 'overview', title: 'Categories', value: Object.keys(productsByCategory).length, icon: Tag, variant: 'success' as const },
-        ].map(card => (
-          <button
-            key={card.key}
-            onClick={() => setActiveFilter(card.key)}
-            className={cn("text-left rounded-lg transition-all", activeFilter === card.key && "ring-2 ring-primary ring-offset-2 ring-offset-background")}
-          >
-            <KpiCard title={card.title} value={card.value} icon={card.icon} variant={card.variant} />
-          </button>
-        ))}
+        ].map(card => {
+          const ringColorMap: Record<string, string> = {
+            default: 'ring-muted-foreground',
+            success: 'ring-success',
+            warning: 'ring-warning',
+            danger: 'ring-destructive',
+            info: 'ring-info',
+          };
+          const ringColor = ringColorMap[card.variant] || 'ring-primary';
+          return (
+            <button
+              key={card.key}
+              onClick={() => setActiveFilter(card.key)}
+              className={cn("text-left rounded-lg transition-all", activeFilter === card.key && `ring-2 ${ringColor} ring-offset-2 ring-offset-background`)}
+            >
+              <KpiCard title={card.title} value={card.value} icon={card.icon} variant={card.variant} />
+            </button>
+          );
+        })}
       </div>
 
       {/* Search + Import on one line */}
@@ -590,9 +600,6 @@ function ParentGroup({
         <td className="py-3 px-4 font-mono text-xs text-primary">{parent.sku}</td>
         <td className="py-3 px-4 text-foreground">
           {parent.name}
-          {variants.length > 0 && (
-            <Badge variant="secondary" className="ml-2 text-[10px]">{variants.length} variant{variants.length !== 1 ? 's' : ''}</Badge>
-          )}
         </td>
         {tab.columns.slice(2).map(col => (
           <td key={col.key} className="py-3 px-4 text-muted-foreground text-xs">{parent.description || '—'}</td>
@@ -641,7 +648,7 @@ function OverviewTab({ productsByCategory }: { productsByCategory: Record<string
       <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="font-semibold text-foreground">SKU Framework Reference</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">JFlowers SKU Framework v3.0 — Dealership Channel — March 2026</p>
+          <p className="text-xs text-muted-foreground mt-0.5">JFlowers SKU Framework v5.0 — Dealership Channel — March 2026</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
