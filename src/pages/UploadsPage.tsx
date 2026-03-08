@@ -399,28 +399,50 @@ export default function UploadsPage() {
       {/* Upload progress */}
       {uploading && (
         <div className={cn(
-          "border rounded-lg p-4 flex items-center gap-3",
+          "border rounded-lg p-4 space-y-3",
           uploading.status === "error" ? "border-destructive bg-destructive/5" :
           uploading.status === "done" ? "border-success bg-success/5" :
           "border-primary bg-primary/5"
         )}>
-          {uploading.status === "parsing" || uploading.status === "importing" || uploading.status === "previewing" ? (
-            <Loader2 className="w-5 h-5 text-primary animate-spin" />
-          ) : uploading.status === "done" ? (
-            <Check className="w-5 h-5 text-success" />
-          ) : (
-            <AlertCircle className="w-5 h-5 text-destructive" />
-          )}
-          <div className="flex-1">
-            <p className="text-sm font-medium text-foreground">{uploading.fileName}</p>
-            <p className="text-xs text-muted-foreground">
-              {uploading.status === "parsing" && "Parsing file..."}
-              {uploading.status === "previewing" && `Scanning ${uploading.total} rows for preview...`}
-              {uploading.status === "importing" && `Importing ${uploading.total} rows...`}
-              {uploading.status === "done" && `Done — ${uploading.processed} imported, ${uploading.errors} errors`}
-              {uploading.status === "error" && (uploading.message || "Import failed")}
-            </p>
+          <div className="flex items-center gap-3">
+            {uploading.status === "parsing" || uploading.status === "importing" || uploading.status === "previewing" ? (
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+            ) : uploading.status === "done" ? (
+              <Check className="w-5 h-5 text-success" />
+            ) : (
+              <AlertCircle className="w-5 h-5 text-destructive" />
+            )}
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">{uploading.fileName}</p>
+              <p className="text-xs text-muted-foreground">
+                {uploading.status === "parsing" && "Parsing file..."}
+                {uploading.status === "previewing" && `Scanning ${uploading.total} rows for preview...`}
+                {uploading.status === "importing" && `Importing row ${uploading.processed + uploading.errors} of ${uploading.total}...`}
+                {uploading.status === "done" && `Done — ${uploading.processed} imported, ${uploading.errors} errors`}
+                {uploading.status === "error" && (uploading.message || "Import failed")}
+              </p>
+            </div>
+            {uploading.status === "importing" && uploading.total > 0 && (
+              <span className="text-sm font-mono font-bold text-primary">
+                {Math.round(((uploading.processed + uploading.errors) / uploading.total) * 100)}%
+              </span>
+            )}
           </div>
+          {/* Progress bar for importing */}
+          {uploading.status === "importing" && uploading.total > 0 && (
+            <div className="space-y-1">
+              <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-primary rounded-full transition-all duration-300 ease-out"
+                  style={{ width: `${Math.round(((uploading.processed + uploading.errors) / uploading.total) * 100)}%` }}
+                />
+              </div>
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{uploading.processed} imported{uploading.errors > 0 ? `, ${uploading.errors} errors` : ''}</span>
+                <span>{uploading.total - uploading.processed - uploading.errors} remaining</span>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
