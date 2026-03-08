@@ -197,7 +197,8 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       description: "Order updated via WooCommerce CSV import", created_by: userId,
     })).filter(e => e.order_id);
     if (eventRows.length > 0) {
-      await db.from("order_events").insert(eventRows).catch(() => {});
+      const { error: evtErr } = await db.from("order_events").insert(eventRows);
+      if (evtErr) console.error("Event insert error:", evtErr);
     }
 
     onProgress?.(totalProcessed, totalErrors);
