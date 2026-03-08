@@ -1,12 +1,17 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { useExceptions } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
-import { AlertTriangle, CheckCircle, Phone, ArrowUp, ArrowDown, ArrowUpDown } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { AlertTriangle, CheckCircle, Phone, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
   TableHeader,
@@ -15,6 +20,15 @@ import {
   TableRow,
   TableCell,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+
+const db = supabase as any;
 
 const REASON_OPTIONS = [
   { value: "oos", label: "OOS", color: "bg-destructive/15 text-destructive" },
@@ -59,8 +73,11 @@ const SortIcon = ({ column, activeCol, activeDir }: { column: SortKey; activeCol
 export default function ExceptionsPage() {
   const { currentCompany } = useCompany();
   const { data: exceptions = [], isLoading } = useExceptions();
+  const queryClient = useQueryClient();
   const [sortCol, setSortCol] = useState<SortKey | null>("order_date");
   const [sortDir, setSortDir] = useState<SortDir>("asc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkApplying, setBulkApplying] = useState(false);
 
   const toggleSort = (col: SortKey) => {
     if (sortCol === col) {
@@ -80,9 +97,9 @@ export default function ExceptionsPage() {
     [exceptions]
   );
 
-  const applySorting = (items: typeof active) => {
+  const applySorting = useCallback((items: typeof active) => {
     if (!sortCol) return items;
-    const sorted = [...items].sort((a, b) => {
+    return [...items].sort((a, b) => {
       let cmp = 0;
       switch (sortCol) {
         case "order_date": {
@@ -106,19 +123,69 @@ export default function ExceptionsPage() {
       }
       return sortDir === "asc" ? cmp : -cmp;
     });
-    return sorted;
-  };
+  }, [sortCol, sortDir]);
 
   const sortedActive = useMemo(() => {
     const onHold = active.filter(e => e.exception_type === "on_hold");
     const other = active.filter(e => e.exception_type !== "on_hold");
     return { onHold: applySorting(onHold), other: applySorting(other) };
-  }, [active, sortCol, sortDir]);
+  }, [active, applySorting]);
+
+  const allActiveIds = useMemo(() => active.map(e => e.id), [active]);
+
+  const toggleOne = (id: string) => {
+    setSelected(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (selected.size === allActiveIds.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(allActiveIds));
+    }
+  };
+
+  const handleBulkReason = async (reason: string) => {
+    if (selected.size === 0) return;
+    setBulkApplying(true);
+    try {
+      const ids = Array.from(selected);
+      const { error } = await db.from("exceptions").update({ reason }).in("id", ids);
+      if (error) throw error;
+      queryClient.invalidateQueries({ queryKey: ["exceptions"] });
+      const label = REASON_OPTIONS.find(r => r.value === reason)?.label || reason;
+      toast({ title: `Set "${label}" on ${ids.length} exception${ids.length > 1 ? "s" : ""}` });
+      setSelected(new Set());
+    } catch (err: any) {
+      console.error("Bulk reason update failed:", err);
+      toast({ title: "Failed to update", description: err.message, variant: "destructive" });
+    }
+    setBulkApplying(false);
+  };
 
   if (!currentCompany) return <EmptyState icon={AlertTriangle} title="No company selected" />;
 
-  const renderSortableHeader = () => (
+  const renderSortableHeader = (showCheckbox: boolean, sectionIds: string[]) => (
     <TableRow className="bg-muted/50">
+      {showCheckbox && (
+        <TableHead className="w-[40px] px-3">
+          <Checkbox
+            checked={sectionIds.length > 0 && sectionIds.every(id => selected.has(id))}
+            onCheckedChange={() => {
+              const allSelected = sectionIds.every(id => selected.has(id));
+              setSelected(prev => {
+                const next = new Set(prev);
+                sectionIds.forEach(id => allSelected ? next.delete(id) : next.add(id));
+                return next;
+              });
+            }}
+          />
+        </TableHead>
+      )}
       <TableHead className="w-[340px]">Order</TableHead>
       <TableHead
         className="w-[150px] text-center cursor-pointer select-none hover:text-foreground transition-colors"
@@ -155,15 +222,21 @@ export default function ExceptionsPage() {
     </TableRow>
   );
 
-  const renderRow = (exc: typeof exceptions[0]) => {
+  const renderRow = (exc: typeof exceptions[0], showCheckbox: boolean) => {
     const orderNumber = exc.orders?.order_number;
     const wooStatus = exc.orders?.woo_status;
     const reasonMeta = getReasonMeta(exc.reason);
     const orderDate = exc.orders?.order_date;
     const isOnHold = exc.exception_type === "on_hold";
+    const isSelected = selected.has(exc.id);
 
     return (
-      <TableRow key={exc.id}>
+      <TableRow key={exc.id} className={cn(isSelected && "bg-accent/50")}>
+        {showCheckbox && (
+          <TableCell className="px-3 py-3">
+            <Checkbox checked={isSelected} onCheckedChange={() => toggleOne(exc.id)} />
+          </TableCell>
+        )}
         <TableCell className="py-3">
           <div className="flex items-center gap-2 min-w-0">
             {orderNumber ? (
@@ -220,6 +293,26 @@ export default function ExceptionsPage() {
         </Badge>
       </div>
 
+      {/* Bulk action bar */}
+      {selected.size > 0 && (
+        <div className="flex items-center gap-3 bg-accent/30 border border-border rounded-lg px-4 py-2.5">
+          <span className="text-sm font-medium">{selected.size} selected</span>
+          <Select onValueChange={handleBulkReason} disabled={bulkApplying}>
+            <SelectTrigger className="h-8 w-[180px] text-xs">
+              <SelectValue placeholder="Assign reason…" />
+            </SelectTrigger>
+            <SelectContent>
+              {REASON_OPTIONS.map(r => (
+                <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => setSelected(new Set())}>
+            <X className="w-3 h-3 mr-1" /> Clear
+          </Button>
+        </div>
+      )}
+
       {isLoading ? (
         <LoadingSpinner message="Loading exceptions..." />
       ) : active.length === 0 && resolved.length === 0 ? (
@@ -233,8 +326,8 @@ export default function ExceptionsPage() {
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
                 <Table>
-                  <TableHeader>{renderSortableHeader()}</TableHeader>
-                  <TableBody>{sortedActive.onHold.map(exc => renderRow(exc))}</TableBody>
+                  <TableHeader>{renderSortableHeader(true, sortedActive.onHold.map(e => e.id))}</TableHeader>
+                  <TableBody>{sortedActive.onHold.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
               </div>
             </div>
@@ -247,8 +340,8 @@ export default function ExceptionsPage() {
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
                 <Table>
-                  <TableHeader>{renderSortableHeader()}</TableHeader>
-                  <TableBody>{sortedActive.other.map(exc => renderRow(exc))}</TableBody>
+                  <TableHeader>{renderSortableHeader(true, sortedActive.other.map(e => e.id))}</TableHeader>
+                  <TableBody>{sortedActive.other.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
               </div>
             </div>
@@ -261,7 +354,7 @@ export default function ExceptionsPage() {
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
                 <Table>
-                  <TableHeader>{renderSortableHeader()}</TableHeader>
+                  <TableHeader>{renderSortableHeader(false, [])}</TableHeader>
                   <TableBody>
                     {resolved.map(exc => {
                       const orderNumber = exc.orders?.order_number;
