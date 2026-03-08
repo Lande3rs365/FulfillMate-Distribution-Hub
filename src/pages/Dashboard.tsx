@@ -8,7 +8,7 @@ import { useCompany } from "@/contexts/CompanyContext";
 import {
   Package, Truck, Warehouse, AlertTriangle,
   BarChart3, Ship, Clock, ArrowRight, ChevronLeft, ChevronRight,
-  ArrowUpDown, ArrowUp, ArrowDown,
+  ArrowUpDown, ArrowUp, ArrowDown, Zap,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { useNavigate } from "react-router-dom";
@@ -65,8 +65,10 @@ export default function Dashboard() {
   const [period, setPeriod] = useState<Period>("week");
   const [ordersPage, setOrdersPage] = useState(1);
   const [exceptionsPage, setExceptionsPage] = useState(1);
+  const [alertsPage, setAlertsPage] = useState(1);
   const [ordersSort, setOrdersSort] = useState<SortState>({ key: 'order_date', dir: 'asc' });
   const [exceptionsSort, setExceptionsSort] = useState<SortState>({ key: 'orders.order_date', dir: 'asc' });
+  const [alertsSort, setAlertsSort] = useState<SortState>({ key: 'orders.order_date', dir: 'asc' });
 
   const toggleSort = (setter: React.Dispatch<React.SetStateAction<SortState>>, pageSetter: React.Dispatch<React.SetStateAction<number>>) => (key: string) => {
     setter(prev => ({ key, dir: prev.key === key && prev.dir === 'asc' ? 'desc' : 'asc' }));
@@ -317,6 +319,61 @@ export default function Dashboard() {
               totalPages={Math.ceil((stats?.oldestExceptions || []).length / PAGE_SIZE)}
               onPrev={() => setExceptionsPage(p => Math.max(1, p - 1))}
               onNext={() => setExceptionsPage(p => Math.min(Math.ceil((stats?.oldestExceptions || []).length / PAGE_SIZE), p + 1))}
+            />
+          </>
+        )}
+      </div>
+
+      {/* Shipping Urgent Alerts */}
+      <div className="bg-card border border-border rounded-lg p-5">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-sm font-semibold flex items-center gap-2">
+            <Zap className="w-4 h-4 text-warning" />
+            Shipping Urgent Alerts
+            <span className="text-xs font-normal text-muted-foreground">({(stats?.shippingAlerts || []).length} requiring action)</span>
+          </h2>
+          <button onClick={() => navigate('/shipments')} className="text-xs text-primary hover:underline flex items-center gap-1">View all <ArrowRight className="w-3 h-3" /></button>
+        </div>
+        {(stats?.shippingAlerts || []).length === 0 ? (
+          <p className="text-xs text-muted-foreground">No shipping alerts 🎉</p>
+        ) : (
+          <>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-muted-foreground text-xs uppercase tracking-wider border-b border-border">
+                    <SortHeader label="Order" sortKey="orders.order_number" current={alertsSort} onSort={toggleSort(setAlertsSort, setAlertsPage)} className="text-left" />
+                    <SortHeader label="Customer" sortKey="orders.customer_name" current={alertsSort} onSort={toggleSort(setAlertsSort, setAlertsPage)} className="text-left" />
+                    <SortHeader label="Order Date" sortKey="orders.order_date" current={alertsSort} onSort={toggleSort(setAlertsSort, setAlertsPage)} className="text-left" />
+                    <th className="text-left py-2 px-3">Tracking</th>
+                    <SortHeader label="Carrier" sortKey="carrier" current={alertsSort} onSort={toggleSort(setAlertsSort, setAlertsPage)} className="text-left" />
+                    <th className="text-left py-2 px-3">Status</th>
+                    <th className="text-left py-2 px-3">Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortRows(stats!.shippingAlerts, alertsSort).slice((alertsPage - 1) * PAGE_SIZE, alertsPage * PAGE_SIZE).map((s: any) => {
+                    const order = s.orders;
+                    return (
+                      <tr key={s.id} onClick={() => navigate(`/orders/${order?.order_number || ''}`)} className="border-b border-border/30 hover:bg-muted/20 cursor-pointer transition-colors">
+                        <td className="py-2 px-3 font-mono text-primary font-medium">{order?.order_number || '—'}</td>
+                        <td className="py-2 px-3 text-foreground">{order?.customer_name || '—'}</td>
+                        <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{order?.order_date ? format(new Date(order.order_date), 'dd MMM') : '—'}</td>
+                        <td className="py-2 px-3 font-mono text-xs text-muted-foreground">{s.tracking_number || '—'}</td>
+                        <td className="py-2 px-3 text-xs text-foreground">{s.carrier || '—'}</td>
+                        <td className="py-2 px-3"><StatusBadge status={s.status} /></td>
+                        <td className="py-2 px-3 text-xs text-muted-foreground max-w-[280px] truncate" title={s.carrier_status_detail || ''}>{s.carrier_status_detail || '—'}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+            <Paginator
+              page={alertsPage}
+              totalPages={Math.ceil((stats?.shippingAlerts || []).length / PAGE_SIZE)}
+              onPrev={() => setAlertsPage(p => Math.max(1, p - 1))}
+              onNext={() => setAlertsPage(p => Math.min(Math.ceil((stats?.shippingAlerts || []).length / PAGE_SIZE), p + 1))}
             />
           </>
         )}

@@ -269,6 +269,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       .map(s => ({
         company_id: companyId, order_id: existingOrderMap.get(s.order_number!)!,
         tracking_number: s.tracking_number, carrier: s.carrier, status: s.status,
+        carrier_status_detail: s.carrier_status_detail,
         shipped_date: s.shipped_date, delivered_date: s.delivered_date,
         shipping_cost: s.shipping_cost, weight_grams: s.weight_grams,
       }));
@@ -295,6 +296,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
         await db.from("shipments").update({
           status: s.status, shipped_date: s.shipped_date, delivered_date: s.delivered_date,
           shipping_cost: s.shipping_cost, carrier: s.carrier, weight_grams: s.weight_grams,
+          carrier_status_detail: s.carrier_status_detail,
           ...(orderId ? { order_id: orderId } : {}),
         }).eq("id", existingShipmentMap.get(s.tracking_number!)!);
         return true;
