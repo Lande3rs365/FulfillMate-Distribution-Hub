@@ -32,6 +32,7 @@ export interface ParsedShipment {
   carrier: string | null;
   service: string | null;
   status: string;
+  carrier_status_detail: string | null;
   shipped_date: string | null;
   delivered_date: string | null;
   shipping_cost: number | null;
