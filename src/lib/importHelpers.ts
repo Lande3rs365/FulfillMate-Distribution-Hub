@@ -17,6 +17,8 @@ export interface ImportResult {
   errors: number;
 }
 
+export type ProgressCallback = (processed: number, errors: number) => void;
+
 // ── Preview: scan what will be created vs updated ──
 
 export async function previewWooCommerceImport(orders: ParsedOrder[], companyId: string): Promise<ImportPreview> {
@@ -75,7 +77,7 @@ export async function previewMasterImport(rows: ParsedMasterRow[], companyId: st
 
 // ── Import: actually write to DB ──
 
-export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: string, userId: string): Promise<ImportResult> {
+export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let processed = 0, errors = 0;
 
   for (const order of orders) {
@@ -123,15 +125,17 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       });
 
       processed++;
+      onProgress?.(processed, errors);
     } catch (err) {
       console.error(`Error importing order ${order.order_number}:`, err);
       errors++;
+      onProgress?.(processed, errors);
     }
   }
   return { processed, errors };
 }
 
-export async function importShipments(shipments: ParsedShipment[], companyId: string, userId: string): Promise<ImportResult> {
+export async function importShipments(shipments: ParsedShipment[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let processed = 0, errors = 0;
 
   for (const shipment of shipments) {
@@ -155,6 +159,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       } else {
         // No order number — skip or create placeholder
         processed++;
+        onProgress?.(processed, errors);
         continue;
       }
 
@@ -168,6 +173,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
             carrier: shipment.carrier, weight_grams: shipment.weight_grams, order_id: orderId,
           }).eq("id", existing.id);
           processed++;
+          onProgress?.(processed, errors);
           continue;
         }
       }
@@ -179,15 +185,17 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
         weight_grams: shipment.weight_grams,
       });
       processed++;
+      onProgress?.(processed, errors);
     } catch (err) {
       console.error(`Error importing shipment for order ${shipment.order_number}:`, err);
       errors++;
+      onProgress?.(processed, errors);
     }
   }
   return { processed, errors };
 }
 
-export async function importMasterRows(rows: ParsedMasterRow[], companyId: string, userId: string): Promise<ImportResult> {
+export async function importMasterRows(rows: ParsedMasterRow[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let processed = 0, errors = 0;
 
   for (const row of rows) {
@@ -245,9 +253,11 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
       });
 
       processed++;
+      onProgress?.(processed, errors);
     } catch (err) {
       console.error(`Error importing master row ${row.order_number}:`, err);
       errors++;
+      onProgress?.(processed, errors);
     }
   }
   return { processed, errors };
