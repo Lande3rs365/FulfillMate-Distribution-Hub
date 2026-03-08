@@ -472,7 +472,7 @@ export default function ProductsPage() {
       {isLoading ? (
         <LoadingSpinner message="Loading products..." />
       ) : activeFilter === 'overview' ? (
-        <OverviewTab totalProducts={products.length} productsByCategory={productsByCategory} />
+        <OverviewTab productsByCategory={productsByCategory} />
       ) : (
         (() => {
           const tab = TABS.find(t => t.key === activeFilter);
