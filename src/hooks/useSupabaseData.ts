@@ -26,13 +26,24 @@ function useCompanyQuery<T>(
 // ── Orders ──
 export function useOrders() {
   return useCompanyQuery<OrderWithItems[]>("orders", async (companyId) => {
-    const { data, error } = await db
-      .from('orders')
-      .select('*, order_items(*)')
-      .eq('company_id', companyId)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    return data || [];
+    // Fetch all orders in pages to avoid the 1000-row PostgREST limit
+    const PAGE_SIZE = 1000;
+    let allData: any[] = [];
+    let page = 0;
+    let hasMore = true;
+    while (hasMore) {
+      const { data, error } = await db
+        .from('orders')
+        .select('*, order_items(*)')
+        .eq('company_id', companyId)
+        .order('created_at', { ascending: false })
+        .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
+      if (error) throw error;
+      allData = allData.concat(data || []);
+      hasMore = (data || []).length === PAGE_SIZE;
+      page++;
+    }
+    return allData;
   });
 }
 
