@@ -6,11 +6,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import EmptyState from "@/components/EmptyState";
-import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown } from "lucide-react";
+import KpiCard from "@/components/KpiCard";
+import { Tag, Search, Upload, Plus, Save, X, Pencil, ChevronRight, ChevronDown, Package, Minus, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
@@ -98,9 +98,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   accessory: 'Accessory', apparel: 'Apparel',
 };
 
+type FilterKey = 'overview' | string;
+
 export default function ProductsPage() {
   const [search, setSearch] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeFilter, setActiveFilter] = useState<FilterKey>("overview");
   const [editing, setEditing] = useState<EditingRow | null>(null);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -121,6 +123,14 @@ export default function ProductsPage() {
     }
     return map;
   }, [products]);
+
+  // KPI counts
+  const counts = useMemo(() => ({
+    total: products.length,
+    parents: products.filter(p => p.row_type === 'parent').length,
+    variants: products.filter(p => p.row_type === 'variant').length,
+    standalone: products.filter(p => p.row_type === 'standalone').length,
+  }), [products]);
 
   // Get filtered products for current tab
   const getTabProducts = useCallback((tab: TabConfig) => {
@@ -184,7 +194,7 @@ export default function ProductsPage() {
     queryClient.invalidateQueries({ queryKey: ["products"] });
   };
 
-  const currentTab = TABS.find(t => t.key === activeTab) || TABS[0];
+  const currentTab = TABS.find(t => t.key === activeFilter) || TABS[0];
 
   const handleAddProduct = async () => {
     if (!newProduct.sku.trim() || !newProduct.name.trim() || !currentCompany) return;
@@ -213,7 +223,16 @@ export default function ProductsPage() {
     return currentTab.categories.flatMap(c => (productsByCategory[c] || []).filter(p => p.row_type === 'parent'));
   }, [currentTab, productsByCategory]);
 
-  if (isLoading) return <LoadingSpinner />;
+  if (!currentCompany) return <EmptyState icon={Tag} title="No company selected" />;
+
+  // Build filter chips config
+  const filterChips: { key: string; label: string }[] = [
+    { key: 'overview', label: 'Overview' },
+    ...TABS.map(tab => ({
+      key: tab.key,
+      label: `${tab.label} (${getTabProducts(tab).length})`,
+    })),
+  ];
 
   const renderTable = (tab: TabConfig) => {
     const tabProducts = getTabProducts(tab);
@@ -234,20 +253,22 @@ export default function ProductsPage() {
   };
 
   const renderFlatTable = (tab: TabConfig, items: Product[]) => (
-    <div className="border border-border rounded-lg overflow-hidden">
-      <table className="w-full text-sm">
-        <thead className="bg-muted/50">
-          <tr>
-            {tab.columns.map(col => (
-              <th key={col.key} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{col.label}</th>
-            ))}
-            <th className="text-center px-4 py-2.5 font-medium text-muted-foreground w-20">Actions</th>
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-border">
-          {items.map(p => renderRow(p, tab))}
-        </tbody>
-      </table>
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-border bg-muted/30 text-muted-foreground text-xs uppercase tracking-wider">
+              {tab.columns.map(col => (
+                <th key={col.key} className="text-left py-3 px-4">{col.label}</th>
+              ))}
+              <th className="text-center py-3 px-4 w-20">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map(p => renderRow(p, tab))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 
@@ -268,42 +289,44 @@ export default function ProductsPage() {
     }
 
     return (
-      <div className="border border-border rounded-lg overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr>
-              <th className="w-8"></th>
-              {tab.columns.map(col => (
-                <th key={col.key} className="text-left px-4 py-2.5 font-medium text-muted-foreground">{col.label}</th>
-              ))}
-              <th className="text-center px-4 py-2.5 font-medium text-muted-foreground w-20">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {parents.map(parent => {
-              const childVariants = variantsByParent.get(parent.id) || [];
-              const isExpanded = expandedParents.has(parent.id);
-              return (
-                <ParentGroup
-                  key={parent.id}
-                  parent={parent}
-                  variants={childVariants}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleParent(parent.id)}
-                  tab={tab}
-                  renderRow={renderRow}
-                />
-              );
-            })}
-            {orphans.map(p => (
-              <tr key={p.id} className="hover:bg-muted/30 transition-colors">
-                <td></td>
-                {renderRowCells(p, tab)}
-                <td className="px-4 py-2.5 text-center">{renderActions(p)}</td>
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="border-b border-border bg-muted/30 text-muted-foreground text-xs uppercase tracking-wider">
+                <th className="w-8"></th>
+                {tab.columns.map(col => (
+                  <th key={col.key} className="text-left py-3 px-4">{col.label}</th>
+                ))}
+                <th className="text-center py-3 px-4 w-20">Actions</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody>
+              {parents.map(parent => {
+                const childVariants = variantsByParent.get(parent.id) || [];
+                const isExpanded = expandedParents.has(parent.id);
+                return (
+                  <ParentGroup
+                    key={parent.id}
+                    parent={parent}
+                    variants={childVariants}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleParent(parent.id)}
+                    tab={tab}
+                    renderRow={renderRow}
+                  />
+                );
+              })}
+              {orphans.map(p => (
+                <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td></td>
+                  {renderRowCells(p, tab)}
+                  <td className="py-3 px-4 text-center">{renderActions(p)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       </div>
     );
   };
@@ -312,22 +335,22 @@ export default function ProductsPage() {
     const isEditing = editing?.id === p.id;
     return tab.columns.map(col => {
       if (col.key === 'sku') {
-        return <td key={col.key} className="px-4 py-2.5 font-mono text-xs text-foreground">{p.sku}</td>;
+        return <td key={col.key} className="py-3 px-4 font-mono text-xs text-primary">{p.sku}</td>;
       }
       if (col.key === 'name') {
         return (
-          <td key={col.key} className="px-4 py-2.5">
+          <td key={col.key} className="py-3 px-4">
             {isEditing ? (
               <Input value={editing!.name} onChange={e => setEditing({ ...editing!, name: e.target.value })} className="h-7 text-sm" />
             ) : (
-              <span className={cn(p.name === p.sku && "text-muted-foreground italic")}>{p.name}</span>
+              <span className={cn("text-foreground", p.name === p.sku && "text-muted-foreground italic")}>{p.name}</span>
             )}
           </td>
         );
       }
       if (col.key === 'description') {
         return (
-          <td key={col.key} className="px-4 py-2.5 text-muted-foreground text-xs max-w-[300px] truncate">
+          <td key={col.key} className="py-3 px-4 text-muted-foreground text-xs max-w-[300px] truncate">
             {isEditing ? (
               <Input value={editing!.description} onChange={e => setEditing({ ...editing!, description: e.target.value })} className="h-7 text-sm" />
             ) : (
@@ -337,18 +360,18 @@ export default function ProductsPage() {
         );
       }
       if (col.key === 'category') {
-        return <td key={col.key} className="px-4 py-2.5"><Badge variant="outline" className="text-xs">{CATEGORY_LABELS[p.category || ''] || p.category || '—'}</Badge></td>;
+        return <td key={col.key} className="py-3 px-4"><Badge variant="outline" className="text-xs">{CATEGORY_LABELS[p.category || ''] || p.category || '—'}</Badge></td>;
       }
       if (col.key === 'row_type') {
         return (
-          <td key={col.key} className="px-4 py-2.5">
+          <td key={col.key} className="py-3 px-4">
             <Badge variant={p.row_type === 'parent' ? 'default' : p.row_type === 'variant' ? 'secondary' : 'outline'} className="text-xs">
               {p.row_type}
             </Badge>
           </td>
         );
       }
-      return <td key={col.key} className="px-4 py-2.5">—</td>;
+      return <td key={col.key} className="py-3 px-4">—</td>;
     });
   };
 
@@ -372,62 +395,90 @@ export default function ProductsPage() {
   const renderRow = (p: Product, tab: TabConfig) => {
     const isEditing = editing?.id === p.id;
     return (
-      <tr key={p.id} className={cn("hover:bg-muted/30 transition-colors", isEditing && "bg-primary/5")}>
+      <tr key={p.id} className={cn("border-b border-border/50 hover:bg-muted/20 transition-colors", isEditing && "bg-primary/5")}>
         {renderRowCells(p, tab)}
-        <td className="px-4 py-2.5 text-center">{renderActions(p)}</td>
+        <td className="py-3 px-4 text-center">{renderActions(p)}</td>
       </tr>
     );
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Tag className="w-5 h-5 text-primary" /> Product Catalog
-          </h1>
-          <p className="text-sm text-muted-foreground">{products.length} products</p>
+    <div className="p-6 space-y-4">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-bold">Product Catalog</h1>
+        <p className="text-sm text-muted-foreground">{products.length} products · SKU framework & catalogue management</p>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard title="Total SKUs" value={counts.total} icon={Tag} variant="info" />
+        <KpiCard title="Parents" value={counts.parents} icon={Package} variant="default" />
+        <KpiCard title="Variants" value={counts.variants} icon={Layers} variant="warning" />
+        <KpiCard title="Standalone" value={counts.standalone} icon={Minus} variant="success" />
+      </div>
+
+      {/* Filter chips + action buttons */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <div className="flex items-center gap-2 flex-wrap">
+          {filterChips.map(f => (
+            <button
+              key={f.key}
+              onClick={() => setActiveFilter(f.key)}
+              className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors border ${
+                activeFilter === f.key
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground border-border hover:bg-muted'
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={handleImport} disabled={importMutation.isPending}>
-            <Upload className={cn("w-4 h-4 mr-1", importMutation.isPending && "animate-spin")} />
+          <button
+            onClick={handleImport}
+            disabled={importMutation.isPending}
+            className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-border bg-card text-muted-foreground hover:bg-muted flex items-center gap-1.5"
+          >
+            <Upload className={cn("w-3.5 h-3.5", importMutation.isPending && "animate-spin")} />
             Import SKU Framework
-          </Button>
-          {activeTab !== 'all' && (
-            <Button size="sm" onClick={() => setAddDialogOpen(true)}>
-              <Plus className="w-4 h-4 mr-1" /> Add Product
-            </Button>
+          </button>
+          {activeFilter !== 'overview' && activeFilter !== 'all' && (
+            <button
+              onClick={() => setAddDialogOpen(true)}
+              className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors border border-primary bg-primary text-primary-foreground hover:bg-primary/90 flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Add Product
+            </button>
           )}
         </div>
       </div>
 
-      <div className="relative">
+      {/* Search */}
+      <div className="relative max-w-sm">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-        <Input placeholder="Search by SKU, name, or details…" value={search} onChange={e => setSearch(e.target.value)} className="pl-9" />
+        <input
+          type="text"
+          placeholder="Search by SKU, name, or details…"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+          className="w-full bg-card border border-border rounded-md pl-9 pr-4 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+        />
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="flex flex-wrap h-auto gap-1">
-          <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-          {TABS.map(tab => {
-            const count = getTabProducts(tab).length;
-            return (
-              <TabsTrigger key={tab.key} value={tab.key} className="text-xs">
-                {tab.label}
-                <Badge variant="secondary" className="ml-1.5 text-[10px] px-1.5 py-0">{count}</Badge>
-              </TabsTrigger>
-            );
-          })}
-        </TabsList>
-        <TabsContent value="overview">
-          <OverviewTab totalProducts={products.length} productsByCategory={productsByCategory} />
-        </TabsContent>
-        {TABS.map(tab => (
-          <TabsContent key={tab.key} value={tab.key}>
-            {renderTable(tab)}
-          </TabsContent>
-        ))}
-      </Tabs>
+      {/* Content */}
+      {isLoading ? (
+        <LoadingSpinner message="Loading products..." />
+      ) : activeFilter === 'overview' ? (
+        <OverviewTab totalProducts={products.length} productsByCategory={productsByCategory} />
+      ) : (
+        (() => {
+          const tab = TABS.find(t => t.key === activeFilter);
+          return tab ? renderTable(tab) : null;
+        })()
+      )}
 
       {/* Add Product Dialog */}
       <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
@@ -486,37 +537,37 @@ function ParentGroup({
 }) {
   return (
     <>
-      <tr className="hover:bg-muted/30 transition-colors font-semibold cursor-pointer" onClick={onToggle}>
-        <td className="px-2 py-2.5 text-center">
+      <tr className="border-b border-border/50 hover:bg-muted/20 transition-colors font-semibold cursor-pointer" onClick={onToggle}>
+        <td className="px-2 py-3 text-center">
           {variants.length > 0 ? (
             isExpanded ? <ChevronDown className="w-4 h-4 text-muted-foreground" /> : <ChevronRight className="w-4 h-4 text-muted-foreground" />
           ) : <span className="w-4 h-4 inline-block" />}
         </td>
-        <td className="px-4 py-2.5 font-mono text-xs text-foreground">{parent.sku}</td>
-        <td className="px-4 py-2.5">
+        <td className="py-3 px-4 font-mono text-xs text-primary">{parent.sku}</td>
+        <td className="py-3 px-4 text-foreground">
           {parent.name}
           {variants.length > 0 && (
             <Badge variant="secondary" className="ml-2 text-[10px]">{variants.length} variant{variants.length !== 1 ? 's' : ''}</Badge>
           )}
         </td>
         {tab.columns.slice(2).map(col => (
-          <td key={col.key} className="px-4 py-2.5 text-muted-foreground text-xs">{parent.description || '—'}</td>
+          <td key={col.key} className="py-3 px-4 text-muted-foreground text-xs">{parent.description || '—'}</td>
         ))}
-        <td className="px-4 py-2.5 text-center">
+        <td className="py-3 px-4 text-center">
           <button onClick={e => { e.stopPropagation(); }} className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground" title="Edit">
             <Pencil className="w-3.5 h-3.5" />
           </button>
         </td>
       </tr>
       {isExpanded && variants.map(v => (
-        <tr key={v.id} className="hover:bg-muted/30 transition-colors bg-muted/10">
+        <tr key={v.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors bg-muted/10">
           <td></td>
-          <td className="px-4 py-2 pl-8 font-mono text-xs text-muted-foreground">{v.sku}</td>
-          <td className="px-4 py-2 text-muted-foreground text-sm">{v.name}</td>
+          <td className="py-3 px-4 pl-8 font-mono text-xs text-muted-foreground">{v.sku}</td>
+          <td className="py-3 px-4 text-muted-foreground text-sm">{v.name}</td>
           {tab.columns.slice(2).map(col => (
-            <td key={col.key} className="px-4 py-2 text-muted-foreground text-xs">{v.description || '—'}</td>
+            <td key={col.key} className="py-3 px-4 text-muted-foreground text-xs">{v.description || '—'}</td>
           ))}
-          <td className="px-4 py-2 text-center">
+          <td className="py-3 px-4 text-center">
             <button className="p-1 rounded hover:bg-muted text-muted-foreground hover:text-foreground" title="Edit">
               <Pencil className="w-3.5 h-3.5" />
             </button>
@@ -558,30 +609,30 @@ function OverviewTab({ totalProducts, productsByCategory }: { totalProducts: num
       </div>
 
       {/* SKU Framework Reference */}
-      <div className="rounded-lg border border-border bg-card">
+      <div className="bg-card border border-border rounded-lg overflow-hidden">
         <div className="px-4 py-3 border-b border-border">
           <h2 className="font-semibold text-foreground">SKU Framework Reference</h2>
           <p className="text-xs text-muted-foreground mt-0.5">JFlowers SKU structure v4.0 — how product codes are constructed</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="text-left px-4 py-2 font-medium text-muted-foreground">Prefix</th>
-                <th className="text-left px-4 py-2 font-medium text-muted-foreground">Category</th>
-                <th className="text-left px-4 py-2 font-medium text-muted-foreground">Pattern</th>
-                <th className="text-left px-4 py-2 font-medium text-muted-foreground">Example</th>
-                <th className="text-left px-4 py-2 font-medium text-muted-foreground">Hierarchy</th>
+            <thead>
+              <tr className="border-b border-border bg-muted/30 text-muted-foreground text-xs uppercase tracking-wider">
+                <th className="text-left py-3 px-4">Prefix</th>
+                <th className="text-left py-3 px-4">Category</th>
+                <th className="text-left py-3 px-4">Pattern</th>
+                <th className="text-left py-3 px-4">Example</th>
+                <th className="text-left py-3 px-4">Hierarchy</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {SKU_STRUCTURE.map(row => (
-                <tr key={row.prefix} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-2.5 font-mono text-xs font-semibold text-primary">{row.prefix}</td>
-                  <td className="px-4 py-2.5 font-medium text-foreground">{row.label}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-muted-foreground">{row.pattern}</td>
-                  <td className="px-4 py-2.5 font-mono text-xs text-foreground">{row.example}</td>
-                  <td className="px-4 py-2.5 text-xs text-muted-foreground">{row.hierarchy}</td>
+                <tr key={row.prefix} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                  <td className="py-3 px-4 font-mono text-xs font-semibold text-primary">{row.prefix}</td>
+                  <td className="py-3 px-4 font-medium text-foreground">{row.label}</td>
+                  <td className="py-3 px-4 font-mono text-xs text-muted-foreground">{row.pattern}</td>
+                  <td className="py-3 px-4 font-mono text-xs text-foreground">{row.example}</td>
+                  <td className="py-3 px-4 text-xs text-muted-foreground">{row.hierarchy}</td>
                 </tr>
               ))}
             </tbody>
@@ -590,7 +641,7 @@ function OverviewTab({ totalProducts, productsByCategory }: { totalProducts: num
       </div>
 
       {/* Row type legend */}
-      <div className="rounded-lg border border-border bg-card p-4">
+      <div className="bg-card border border-border rounded-lg p-4">
         <h3 className="font-semibold text-foreground text-sm mb-3">Row Types</h3>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="flex items-start gap-2">
