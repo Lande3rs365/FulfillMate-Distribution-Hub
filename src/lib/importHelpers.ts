@@ -457,6 +457,7 @@ async function createOnHoldExceptions(
     }));
 
   for (let i = 0; i < toCreate.length; i += BATCH_SIZE) {
-    await db.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE)).catch(() => {});
+    const { error: excErr } = await db.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE));
+    if (excErr) console.error("Exception insert error:", excErr);
   }
 }
