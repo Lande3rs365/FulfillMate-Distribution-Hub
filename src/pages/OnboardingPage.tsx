@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCompany } from "@/contexts/CompanyContext";
@@ -189,6 +190,7 @@ export default function OnboardingPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
+      <AnimatePresence mode="wait">
       {/* Step 0: Business Type */}
       {step === 0 && (
         <OnboardingStepCard
@@ -376,6 +378,7 @@ export default function OnboardingPage() {
           </div>
         </OnboardingStepCard>
       )}
+      </AnimatePresence>
     </div>
   );
 }
