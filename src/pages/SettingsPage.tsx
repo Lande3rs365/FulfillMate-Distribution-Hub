@@ -338,9 +338,27 @@ function TeamTab() {
   };
 
   const pending = invitations.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date());
+  const totalSeats = members.length + pending.length;
+  const atLimit = totalSeats >= FREE_MEMBER_LIMIT;
 
   return (
     <div className="space-y-6">
+      {/* Free plan banner */}
+      <div className="flex items-center justify-between rounded-lg border border-border bg-muted/30 px-4 py-3">
+        <div className="flex items-center gap-2 text-sm">
+          <Users className="w-4 h-4 text-muted-foreground" />
+          <span className="text-muted-foreground">
+            <strong className="text-foreground">{totalSeats}</strong> / {FREE_MEMBER_LIMIT} seats used
+          </span>
+          <Badge variant="secondary" className="text-[10px]">Free Plan</Badge>
+        </div>
+        {atLimit && (
+          <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate("/billing")}>
+            <Crown className="w-3.5 h-3.5" /> Upgrade
+          </Button>
+        )}
+      </div>
+
       {/* Current Members */}
       <Card className="border-border bg-card">
         <CardHeader>
