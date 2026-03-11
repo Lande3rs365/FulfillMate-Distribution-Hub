@@ -683,6 +683,44 @@ export type Database = {
         }
         Relationships: []
       }
+      purchased_addons: {
+        Row: {
+          addon_type: string
+          company_id: string
+          created_at: string
+          id: string
+          purchased_by: string
+          quantity: number
+          stripe_payment_id: string | null
+        }
+        Insert: {
+          addon_type: string
+          company_id: string
+          created_at?: string
+          id?: string
+          purchased_by: string
+          quantity?: number
+          stripe_payment_id?: string | null
+        }
+        Update: {
+          addon_type?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          purchased_by?: string
+          quantity?: number
+          stripe_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "purchased_addons_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       returns: {
         Row: {
           company_id: string

@@ -18,6 +18,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { format } from "date-fns";
+import { useExtraSeats } from "@/hooks/useSupabaseData";
+import { Coffee } from "lucide-react";
 import type { StockLocation } from "@/types/database";
 
 const db = supabase as any;
@@ -256,6 +258,7 @@ function TeamTab() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const extraSeats = useExtraSeats();
 
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
@@ -338,8 +341,9 @@ function TeamTab() {
   };
 
   const pending = invitations.filter((i) => !i.accepted_at && new Date(i.expires_at) > new Date());
+  const seatLimit = FREE_MEMBER_LIMIT + extraSeats;
   const totalSeats = members.length + pending.length;
-  const atLimit = totalSeats >= FREE_MEMBER_LIMIT;
+  const atLimit = totalSeats >= seatLimit;
 
   return (
     <div className="space-y-6">
@@ -348,14 +352,24 @@ function TeamTab() {
         <div className="flex items-center gap-2 text-sm">
           <Users className="w-4 h-4 text-muted-foreground" />
           <span className="text-muted-foreground">
-            <strong className="text-foreground">{totalSeats}</strong> / {FREE_MEMBER_LIMIT} seats used
+            <strong className="text-foreground">{totalSeats}</strong> / {seatLimit} seats used
           </span>
           <Badge variant="secondary" className="text-[10px]">Free Plan</Badge>
+          {extraSeats > 0 && (
+            <Badge variant="outline" className="text-[10px] gap-1">
+              <Coffee className="w-3 h-3" /> +{extraSeats} extra
+            </Badge>
+          )}
         </div>
         {atLimit && (
-          <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate("/billing")}>
-            <Crown className="w-3.5 h-3.5" /> Upgrade
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate("/billing")}>
+              <Coffee className="w-3.5 h-3.5" /> Buy Seat — $5
+            </Button>
+            <Button size="sm" variant="default" className="gap-1.5" onClick={() => navigate("/billing")}>
+              <Crown className="w-3.5 h-3.5" /> Upgrade
+            </Button>
+          </div>
         )}
       </div>
 
@@ -405,12 +419,17 @@ function TeamTab() {
             <div>
               <p className="text-sm font-medium text-foreground">Team limit reached</p>
               <p className="text-xs text-muted-foreground mt-1">
-                The free plan supports up to {FREE_MEMBER_LIMIT} team members. Upgrade to add more.
+                Your plan supports up to {seatLimit} team members. Buy an extra seat or upgrade.
               </p>
             </div>
-            <Button onClick={() => navigate("/billing")} className="gap-1.5 mt-1">
-              <Crown className="w-4 h-4" /> Upgrade Plan
-            </Button>
+            <div className="flex items-center gap-2 mt-1">
+              <Button variant="outline" onClick={() => navigate("/billing")} className="gap-1.5">
+                <Coffee className="w-4 h-4" /> Buy Extra Seat — $5
+              </Button>
+              <Button onClick={() => navigate("/billing")} className="gap-1.5">
+                <Crown className="w-4 h-4" /> Upgrade Plan
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ) : (
