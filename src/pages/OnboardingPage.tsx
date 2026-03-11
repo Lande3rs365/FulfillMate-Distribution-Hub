@@ -378,6 +378,7 @@ export default function OnboardingPage() {
           </div>
         </OnboardingStepCard>
       )}
+      </AnimatePresence>
     </div>
   );
 }
