@@ -172,7 +172,7 @@ export function useReturns() {
 // ── Manufacturer Manifests ──
 export function useManufacturerManifests() {
   return useCompanyQuery<ManifestWithItems[]>("manufacturer_manifests", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('manufacturer_manifests')
       .select('*, manufacturer_manifest_items(*)')
       .eq('company_id', companyId)
