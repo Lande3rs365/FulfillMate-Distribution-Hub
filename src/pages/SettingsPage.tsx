@@ -40,7 +40,8 @@ function CompanyDetailsTab() {
     if (error) {
       const msg = error.code === "23505"
         ? "That company code is already taken."
-        : error.message;
+        : "Something went wrong. Please try again.";
+      console.error("[settings:save]", error);
       toast({ title: "Error", description: msg, variant: "destructive" });
     } else {
       setCurrentCompany({
@@ -110,7 +111,8 @@ function LocationsTab() {
     });
     setAdding(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("[settings:location-add]", error);
+      toast({ title: "Error", description: "Failed to add location. Please try again.", variant: "destructive" });
     } else {
       toast({ title: "Location added" });
       setNewName("");
@@ -126,7 +128,8 @@ function LocationsTab() {
       .update({ is_active: false })
       .eq("id", loc.id);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("[settings:location-deactivate]", error);
+      toast({ title: "Error", description: "Failed to deactivate location. Please try again.", variant: "destructive" });
     } else {
       toast({ title: "Location deactivated" });
       queryClient.invalidateQueries({ queryKey: ["stock_locations"] });
