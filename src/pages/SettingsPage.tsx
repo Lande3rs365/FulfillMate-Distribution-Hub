@@ -111,7 +111,8 @@ function LocationsTab() {
     });
     setAdding(false);
     if (error) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      console.error("[settings:location-add]", error);
+      toast({ title: "Error", description: "Failed to add location. Please try again.", variant: "destructive" });
     } else {
       toast({ title: "Location added" });
       setNewName("");
