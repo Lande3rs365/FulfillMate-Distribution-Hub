@@ -266,13 +266,13 @@ function TeamTab() {
   const { data: members = [] } = useQuery<TeamMember[]>({
     queryKey: ["team_members", currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from("user_companies")
         .select("id, user_id, role, created_at, profile:profiles!user_companies_user_id_fkey(display_name, avatar_url)")
         .eq("company_id", currentCompany!.id);
       if (error) {
         // If the join fails, fetch without profiles
-        const { data: fallback, error: fbErr } = await db
+        const { data: fallback, error: fbErr } = await supabase
           .from("user_companies")
           .select("id, user_id, role, created_at")
           .eq("company_id", currentCompany!.id);
