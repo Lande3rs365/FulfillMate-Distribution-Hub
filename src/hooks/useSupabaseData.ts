@@ -70,10 +70,10 @@ export function useOrderEvents(orderId: string | undefined) {
       const { data, error } = await supabase
         .from('order_events')
         .select('*')
-        .eq('order_id', orderId)
+        .eq('order_id', orderId!)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as OrderEvent[];
     },
     enabled: !!orderId,
   });
