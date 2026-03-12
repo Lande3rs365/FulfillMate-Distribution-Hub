@@ -106,7 +106,7 @@ describe("CompanyGate", () => {
 
     const { container } = render(
       createElement(
-        MemoryRouter, null,
+        MemoryRouter, { future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(CompanyGate, null, createElement("div", null, "Content"))
       )
     );
