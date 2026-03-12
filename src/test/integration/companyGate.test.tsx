@@ -45,7 +45,7 @@ describe("CompanyGate", () => {
 
     render(
       createElement(
-        MemoryRouter, null,
+        MemoryRouter, { future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(CompanyGate, null, createElement("div", { "data-testid": "child" }, "Content"))
       )
     );
@@ -59,7 +59,7 @@ describe("CompanyGate", () => {
 
     render(
       createElement(
-        MemoryRouter, { initialEntries: ["/dashboard"] },
+        MemoryRouter, { initialEntries: ["/dashboard"], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(
           Routes, null,
           createElement(Route, {
@@ -83,7 +83,7 @@ describe("CompanyGate", () => {
 
     render(
       createElement(
-        MemoryRouter, { initialEntries: ["/dashboard"] },
+        MemoryRouter, { initialEntries: ["/dashboard"], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(
           Routes, null,
           createElement(Route, {
@@ -106,7 +106,7 @@ describe("CompanyGate", () => {
 
     const { container } = render(
       createElement(
-        MemoryRouter, null,
+        MemoryRouter, { future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(CompanyGate, null, createElement("div", null, "Content"))
       )
     );
@@ -124,7 +124,7 @@ describe("CompanyGate", () => {
 
     render(
       createElement(
-        MemoryRouter, { initialEntries: ["/dashboard"] },
+        MemoryRouter, { initialEntries: ["/dashboard"], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
         createElement(
           Routes, null,
           createElement(Route, {

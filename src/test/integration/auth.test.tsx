@@ -122,7 +122,7 @@ describe("ProtectedRoute", () => {
       createElement(
         AuthProvider, null,
         createElement(
-          MemoryRouter, { initialEntries: ["/dashboard"] },
+          MemoryRouter, { initialEntries: ["/dashboard"], future: { v7_startTransition: true, v7_relativeSplatPath: true } },
           createElement(
             Routes, null,
             createElement(Route, { path: "/login", element: createElement("div", null, "Login Page") }),
