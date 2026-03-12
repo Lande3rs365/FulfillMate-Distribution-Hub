@@ -329,6 +329,65 @@ export default function IntegrationsPage() {
                   <p className="text-sm text-muted-foreground animate-pulse">{syncProgress}</p>
                 )}
               </div>
+
+              <Separator />
+
+              {/* Auto-Sync Section */}
+              <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium text-foreground">Automatic Sync</h3>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Automatically sync new orders from WooCommerce on a schedule. The system checks every 5 minutes and syncs companies whose interval has elapsed.
+                </p>
+
+                <div className="flex items-center gap-3">
+                  <Label htmlFor="sync-interval" className="text-sm whitespace-nowrap">Sync every</Label>
+                  <Select
+                    value={String(integration.sync_interval_minutes ?? 0)}
+                    onValueChange={async (val) => {
+                      const minutes = parseInt(val, 10);
+                      const { error } = await supabase
+                        .from("woocommerce_integrations")
+                        .update({ sync_interval_minutes: minutes })
+                        .eq("company_id", currentCompany!.id);
+                      if (error) {
+                        toast.error("Failed to update", { description: error.message });
+                      } else {
+                        queryClient.invalidateQueries({ queryKey: ["woo_integration"] });
+                        toast.success(minutes === 0 ? "Auto-sync disabled" : `Auto-sync set to every ${minutes} minutes`);
+                      }
+                    }}
+                  >
+                    <SelectTrigger className="w-48" id="sync-interval">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">Disabled</SelectItem>
+                      <SelectItem value="5">5 minutes</SelectItem>
+                      <SelectItem value="15">15 minutes</SelectItem>
+                      <SelectItem value="30">30 minutes</SelectItem>
+                      <SelectItem value="60">1 hour</SelectItem>
+                      <SelectItem value="360">6 hours</SelectItem>
+                      <SelectItem value="720">12 hours</SelectItem>
+                      <SelectItem value="1440">24 hours</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {integration.sync_interval_minutes > 0 && (
+                  <div className="rounded-md bg-muted/50 px-3 py-2 text-xs text-muted-foreground">
+                    <span className="font-medium text-foreground">Active</span> — Orders will be synced automatically every {integration.sync_interval_minutes} minutes.
+                    {integration.last_sync_at && (
+                      <> Next sync due around {format(
+                        new Date(new Date(integration.last_sync_at).getTime() + integration.sync_interval_minutes * 60_000),
+                        "PPp"
+                      )}.</>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
 
