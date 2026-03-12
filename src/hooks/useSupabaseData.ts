@@ -8,8 +8,6 @@ import type {
   OrderEvent, StockLocation,
 } from "@/types/database";
 
-const db = supabase as any;
-
 function useCompanyQuery<T>(
   key: string,
   queryFn: (companyId: string) => Promise<T>,
@@ -28,7 +26,7 @@ export function useOrders() {
   return useCompanyQuery<OrderWithItems[]>("orders", async (companyId) => {
     // Fetch all orders in pages to avoid the 1000-row PostgREST limit
     const PAGE_SIZE = 1000;
-    let allData: any[] = [];
+    let allData: OrderWithItems[] = [];
     let page = 0;
     let hasMore = true;
     while (hasMore) {
@@ -39,7 +37,7 @@ export function useOrders() {
         .order('created_at', { ascending: false })
         .range(page * PAGE_SIZE, (page + 1) * PAGE_SIZE - 1);
       if (error) throw error;
-      allData = allData.concat(data || []);
+      allData = allData.concat((data || []) as OrderWithItems[]);
       hasMore = (data || []).length === PAGE_SIZE;
       page++;
     }
@@ -254,7 +252,7 @@ export function useImportSkuFramework() {
       const { data: existing, error: pErr } = await db
         .from('products').select('sku, id').eq('company_id', companyId);
       if (pErr) throw pErr;
-      const existingMap = new Map((existing || []).map((p: any) => [p.sku, p.id]));
+      const existingMap = new Map((existing || []).map((p) => [p.sku, p.id]));
 
       const parents = parsed.filter(p => p.row_type === 'parent' || p.row_type === 'standalone');
       const variants = parsed.filter(p => p.row_type === 'variant');
@@ -270,7 +268,7 @@ export function useImportSkuFramework() {
           company_id: companyId, sku: p.sku, name: p.name,
           category: p.category, row_type: p.row_type, description: p.description,
         }));
-        const { data: inserted, error } = await db.from('products').insert(batch).select('sku, id');
+        const { data: inserted, error } = await supabase.from('products').insert(batch).select('sku, id');
         if (error) throw error;
         for (const row of (inserted || [])) existingMap.set(row.sku, row.id);
         created += batch.length;
@@ -290,7 +288,7 @@ export function useImportSkuFramework() {
             parent_product_id: parentId,
           };
         });
-        const { data: inserted, error } = await db.from('products').insert(batch).select('sku, id');
+        const { data: inserted, error } = await supabase.from('products').insert(batch).select('sku, id');
         if (error) throw error;
         for (const row of (inserted || [])) existingMap.set(row.sku, row.id);
         created += batch.length;
@@ -317,21 +315,21 @@ export function useDashboardStats() {
       const todayISO = todayStart.toISOString();
 
       const [orders, shipments, products, inventory, exceptions, movements, manifests, todayProcessing, todayShipments, oldestExceptions, shippingAlerts] = await Promise.all([
-        db.from('orders').select('id, status, order_date, created_at').eq('company_id', cid),
-        db.from('shipments').select('id, status, shipped_date, created_at').eq('company_id', cid),
-        db.from('returns').select('id', { count: 'exact' }).eq('company_id', cid).in('status', ['initiated', 'received']),
-        db.from('inventory').select('*, products(sku, name, reorder_point)').eq('company_id', cid),
-        db.from('exceptions').select('*').eq('company_id', cid).eq('status', 'open'),
-        db.from('stock_movements').select('*').eq('company_id', cid).order('timestamp', { ascending: false }).limit(20),
-        db.from('manufacturer_manifests').select('*, manufacturer_manifest_items(*)').eq('company_id', cid).in('status', ['pending', 'shipped', 'in_transit']).order('eta', { ascending: true }),
+        supabase.from('orders').select('id, status, order_date, created_at').eq('company_id', cid),
+        supabase.from('shipments').select('id, status, shipped_date, created_at').eq('company_id', cid),
+        supabase.from('returns').select('id', { count: 'exact' }).eq('company_id', cid).in('status', ['initiated', 'received']),
+        supabase.from('inventory').select('*, products(sku, name, reorder_point)').eq('company_id', cid),
+        supabase.from('exceptions').select('*').eq('company_id', cid).eq('status', 'open'),
+        supabase.from('stock_movements').select('*').eq('company_id', cid).order('timestamp', { ascending: false }).limit(20),
+        supabase.from('manufacturer_manifests').select('*, manufacturer_manifest_items(*)').eq('company_id', cid).in('status', ['pending', 'shipped', 'in_transit']).order('eta', { ascending: true }),
         // All processing orders
-        db.from('orders').select('id, order_number, customer_name, order_date, status, woo_status, total_amount').eq('company_id', cid).eq('status', 'processing').order('order_date', { ascending: false }),
+        supabase.from('orders').select('id, order_number, customer_name, order_date, status, woo_status, total_amount').eq('company_id', cid).eq('status', 'processing').order('order_date', { ascending: false }),
         // Today's shipments (by shipped_date, not created_at — avoids inflating count on import days)
-        db.from('shipments').select('id').eq('company_id', cid).gte('shipped_date', todayISO),
+        supabase.from('shipments').select('id').eq('company_id', cid).gte('shipped_date', todayISO),
         // Oldest open exceptions with linked order info
-        db.from('exceptions').select('*, orders:linked_order_id(order_number, customer_name, order_date)').eq('company_id', cid).eq('status', 'open').order('created_at', { ascending: true }).limit(50),
+        supabase.from('exceptions').select('*, orders:linked_order_id(order_number, customer_name, order_date)').eq('company_id', cid).eq('status', 'open').order('created_at', { ascending: true }).limit(50),
         // Shipping urgent alerts — shipments with problematic carrier statuses
-        db.from('shipments').select('*, orders:order_id(order_number, customer_name, order_date)').eq('company_id', cid).not('status', 'in', '("delivered","in_transit","label_created")').order('shipped_date', { ascending: true }).limit(50),
+        supabase.from('shipments').select('*, orders:order_id(order_number, customer_name, order_date)').eq('company_id', cid).not('status', 'in', '("delivered","in_transit","label_created")').order('shipped_date', { ascending: true }).limit(50),
       ]);
 
       const orderList = orders.data || [];

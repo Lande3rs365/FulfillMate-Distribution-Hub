@@ -32,7 +32,17 @@ import SettingsPage from "@/pages/SettingsPage";
 import BillingPage from "@/pages/BillingPage";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      // Retry failed requests up to 2 times with exponential back-off (1s → 2s → 4s)
+      retry: 2,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 10_000),
+      // Keep data fresh for 30 s before triggering a background refetch
+      staleTime: 30_000,
+    },
+  },
+});
 
 const App = () => (
   <ErrorBoundary>

@@ -1,8 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { ParsedOrder, ParsedShipment, ParsedMasterRow } from "./csvParsers";
 
-const db = supabase as any;
-
 const BATCH_SIZE = 100;
 
 export interface ImportPreview {
@@ -28,7 +26,7 @@ async function fetchAllExisting(table: string, companyId: string, column: string
   const map = new Map<string, string>();
   for (let i = 0; i < values.length; i += BATCH_SIZE) {
     const chunk = values.slice(i, i + BATCH_SIZE);
-    const { data } = await db.from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk);
+    const { data } = await supabase.from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk);
     for (const row of (data || [])) {
       map.set(row[column], row.id);
     }
@@ -112,7 +110,7 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
   for (let i = 0; i < toInsert.length; i += BATCH_SIZE) {
     const chunk = toInsert.slice(i, i + BATCH_SIZE);
     try {
-      const { data: inserted, error } = await db.from("orders").insert(
+      const { data: inserted, error } = await supabase.from("orders").insert(
         chunk.map(o => ({
           company_id: companyId, order_number: o.order_number, order_date: o.order_date,
           status: o.status, woo_status: o.woo_status, customer_name: o.customer_name,
@@ -136,7 +134,7 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
         })) : [];
       });
       if (allLineItems.length > 0) {
-        await db.from("order_items").insert(allLineItems);
+        await supabase.from("order_items").insert(allLineItems);
       }
 
       // Batch insert events
@@ -145,7 +143,7 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
         description: "Order created via WooCommerce CSV import", created_by: userId,
       })).filter(e => e.order_id);
       if (events.length > 0) {
-        await db.from("order_events").insert(events);
+        await supabase.from("order_events").insert(events);
       }
 
       totalProcessed += chunk.length;
@@ -162,7 +160,7 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
     const updatePromises = chunk.map(async (order) => {
       const orderId = existingMap.get(order.order_number)!;
       try {
-        await db.from("orders").update({
+        await supabase.from("orders").update({
           order_date: order.order_date, status: order.status, woo_status: order.woo_status,
           customer_name: order.customer_name, customer_email: order.customer_email,
           customer_phone: order.customer_phone, shipping_address: order.shipping_address,
@@ -170,9 +168,9 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
         }).eq("id", orderId);
 
         // Replace line items
-        await db.from("order_items").delete().eq("order_id", orderId);
+        await supabase.from("order_items").delete().eq("order_id", orderId);
         if (order.line_items.length > 0) {
-          await db.from("order_items").insert(order.line_items.map(li => ({
+          await supabase.from("order_items").insert(order.line_items.map(li => ({
             order_id: orderId, sku: li.sku, quantity: li.quantity, unit_price: li.unit_price, line_total: li.line_total,
           })));
         }
@@ -194,7 +192,7 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       description: "Order updated via WooCommerce CSV import", created_by: userId,
     })).filter(e => e.order_id);
     if (eventRows.length > 0) {
-      await db.from("order_events").insert(eventRows);
+      await supabase.from("order_events").insert(eventRows);
     }
 
     onProgress?.(totalProcessed, totalErrors);
@@ -244,7 +242,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       };
     });
     try {
-      const { data: inserted } = await db.from("orders").insert(orderData).select("id, order_number");
+      const { data: inserted } = await supabase.from("orders").insert(orderData).select("id, order_number");
       for (const row of (inserted || [])) {
         existingOrderMap.set(row.order_number, row.id);
       }
@@ -271,7 +269,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       }));
     if (insertData.length > 0) {
       try {
-        await db.from("shipments").insert(insertData);
+        await supabase.from("shipments").insert(insertData);
         totalProcessed += insertData.length;
       } catch {
         totalErrors += insertData.length;
@@ -288,7 +286,7 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
     const results = await Promise.all(chunk.map(async (s) => {
       try {
         const orderId = s.order_number ? existingOrderMap.get(s.order_number) : undefined;
-        await db.from("shipments").update({
+        await supabase.from("shipments").update({
           status: s.status, shipped_date: s.shipped_date, delivered_date: s.delivered_date,
           shipping_cost: s.shipping_cost, carrier: s.carrier, weight_grams: s.weight_grams,
           carrier_status_detail: s.carrier_status_detail,
@@ -324,7 +322,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
   for (let i = 0; i < toInsertOrders.length; i += BATCH_SIZE) {
     const chunk = toInsertOrders.slice(i, i + BATCH_SIZE);
     try {
-      const { data: inserted, error } = await db.from("orders").insert(
+      const { data: inserted, error } = await supabase.from("orders").insert(
         chunk.map(r => ({
           company_id: companyId, order_number: r.order_number, order_date: r.order_date,
           status: r.status, woo_status: r.woo_status, customer_name: r.customer_name,
@@ -347,7 +345,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
     const chunk = toUpdateOrders.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(chunk.map(async (r) => {
       try {
-        await db.from("orders").update({
+        await supabase.from("orders").update({
           order_date: r.order_date, status: r.status, woo_status: r.woo_status,
           customer_name: r.customer_name, total_amount: r.total_amount, source: "woocommerce",
         }).eq("id", existingOrderMap.get(r.order_number)!);
@@ -367,7 +365,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
   for (let i = 0; i < newShipmentRows.length; i += BATCH_SIZE) {
     const chunk = newShipmentRows.slice(i, i + BATCH_SIZE);
     try {
-      await db.from("shipments").insert(chunk.map(r => ({
+      await supabase.from("shipments").insert(chunk.map(r => ({
         company_id: companyId, order_id: existingOrderMap.get(r.order_number)!,
         tracking_number: r.tracking_number, carrier: r.carrier, status: r.tracking_status,
         shipped_date: r.tracking_status !== "label_created" ? r.tracking_date : null,
@@ -383,7 +381,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
     const chunk = updateShipmentRows.slice(i, i + BATCH_SIZE);
     await Promise.all(chunk.map(async (r) => {
       try {
-        await db.from("shipments").update({
+        await supabase.from("shipments").update({
           carrier: r.carrier, status: r.tracking_status,
           shipped_date: r.tracking_status !== "label_created" ? r.tracking_date : null,
           delivered_date: r.tracking_status === "delivered" ? r.tracking_date : null,
@@ -400,7 +398,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
     description: `Order via Master XLSX import`, created_by: userId,
   })).filter(e => e.order_id);
   for (let i = 0; i < allEvents.length; i += BATCH_SIZE) {
-    await db.from("order_events").insert(allEvents.slice(i, i + BATCH_SIZE));
+    await supabase.from("order_events").insert(allEvents.slice(i, i + BATCH_SIZE));
   }
 
   // 6. Handle on-hold exceptions
@@ -430,7 +428,7 @@ async function createOnHoldExceptions(
   const existingExceptions = new Set<string>();
   for (let i = 0; i < orderIds.length; i += BATCH_SIZE) {
     const chunk = orderIds.slice(i, i + BATCH_SIZE);
-    const { data } = await db.from("exceptions").select("linked_order_id")
+    const { data } = await supabase.from("exceptions").select("linked_order_id")
       .eq("company_id", companyId).eq("exception_type", "on_hold")
       .in("status", ["open", "investigating"]).in("linked_order_id", chunk);
     for (const row of (data || [])) {
@@ -452,6 +450,6 @@ async function createOnHoldExceptions(
     }));
 
   for (let i = 0; i < toCreate.length; i += BATCH_SIZE) {
-    await db.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE));
+    await supabase.from("exceptions").insert(toCreate.slice(i, i + BATCH_SIZE));
   }
 }
