@@ -143,7 +143,7 @@ export function useStockMovementsByProduct(productId: string | undefined) {
 // ── Shipments ──
 export function useShipments() {
   return useCompanyQuery<ShipmentWithOrder[]>("shipments", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('shipments')
       .select('*, orders(order_number, customer_name)')
       .eq('company_id', companyId)
