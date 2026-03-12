@@ -285,7 +285,7 @@ export function useImportSkuFramework() {
           return {
             company_id: companyId, sku: v.sku, name: v.name,
             category: v.category, row_type: v.row_type, description: v.description,
-            parent_product_id: parentId,
+            parent_product_id: parentId as string | undefined,
           };
         });
         const { data: inserted, error } = await supabase.from('products').insert(batch).select('sku, id');
