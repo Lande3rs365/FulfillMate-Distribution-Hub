@@ -30,7 +30,7 @@ export function useOrders() {
     let page = 0;
     let hasMore = true;
     while (hasMore) {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
         .eq('company_id', companyId)
@@ -50,7 +50,7 @@ export function useOrder(orderId: string | undefined) {
   return useQuery<OrderWithItems | null>({
     queryKey: ["order", orderId, currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
         .eq('company_id', currentCompany!.id)
@@ -64,42 +64,45 @@ export function useOrder(orderId: string | undefined) {
 }
 
 export function useOrderEvents(orderId: string | undefined) {
+  const { currentCompany } = useCompany();
   return useQuery<OrderEvent[]>({
-    queryKey: ["order_events", orderId],
+    queryKey: ["order_events", orderId, currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('order_events')
         .select('*')
-        .eq('order_id', orderId)
+        .eq('order_id', orderId!)
         .order('created_at', { ascending: true });
       if (error) throw error;
-      return data || [];
+      return (data || []) as unknown as OrderEvent[];
     },
-    enabled: !!orderId,
+    enabled: !!orderId && !!currentCompany?.id,
   });
 }
 
 // ── Order Shipments ──
 export function useOrderShipments(orderId: string | undefined) {
+  const { currentCompany } = useCompany();
   return useQuery<Shipment[]>({
-    queryKey: ["order_shipments", orderId],
+    queryKey: ["order_shipments", orderId, currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('shipments')
         .select('*')
+        .eq('company_id', currentCompany!.id)
         .eq('order_id', orderId)
         .order('created_at', { ascending: false });
       if (error) throw error;
       return data || [];
     },
-    enabled: !!orderId,
+    enabled: !!orderId && !!currentCompany?.id,
   });
 }
 
 // ── Inventory ──
 export function useInventory() {
   return useCompanyQuery<InventoryWithRelations[]>("inventory", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('inventory')
       .select('*, products(sku, name, reorder_point), stock_locations(name, code)')
       .eq('company_id', companyId);
@@ -111,7 +114,7 @@ export function useInventory() {
 // ── Stock Movements ──
 export function useStockMovements() {
   return useCompanyQuery<StockMovement[]>("stock_movements", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('stock_movements')
       .select('*, products:product_id(name)')
       .eq('company_id', companyId)
@@ -126,7 +129,7 @@ export function useStockMovementsByProduct(productId: string | undefined) {
   return useQuery<StockMovement[]>({
     queryKey: ["stock_movements_product", productId, currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('stock_movements')
         .select('*')
         .eq('company_id', currentCompany!.id)
@@ -143,7 +146,7 @@ export function useStockMovementsByProduct(productId: string | undefined) {
 // ── Shipments ──
 export function useShipments() {
   return useCompanyQuery<ShipmentWithOrder[]>("shipments", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('shipments')
       .select('*, orders(order_number, customer_name)')
       .eq('company_id', companyId)
@@ -158,7 +161,7 @@ export function useReturns() {
   return useCompanyQuery<(Return & { orders: Pick<Order, 'order_number'> | null })[]>(
     "returns",
     async (companyId) => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('returns')
         .select('*, orders(order_number)')
         .eq('company_id', companyId)
@@ -172,7 +175,7 @@ export function useReturns() {
 // ── Manufacturer Manifests ──
 export function useManufacturerManifests() {
   return useCompanyQuery<ManifestWithItems[]>("manufacturer_manifests", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('manufacturer_manifests')
       .select('*, manufacturer_manifest_items(*)')
       .eq('company_id', companyId)
@@ -185,7 +188,7 @@ export function useManufacturerManifests() {
 // ── Exceptions ──
 export function useExceptions() {
   return useCompanyQuery<(Exception & { orders: Pick<Order, 'order_number' | 'customer_name' | 'woo_status' | 'order_date'> | null })[]>("exceptions", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('exceptions')
       .select('*, orders:linked_order_id(order_number, customer_name, woo_status, order_date)')
       .eq('company_id', companyId)
@@ -198,7 +201,7 @@ export function useExceptions() {
 // ── Products ──
 export function useProducts() {
   return useCompanyQuery<Product[]>("products", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('company_id', companyId)
@@ -212,7 +215,7 @@ export function useProducts() {
 // ── Locations ──
 export function useStockLocations() {
   return useCompanyQuery<StockLocation[]>("stock_locations", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('stock_locations')
       .select('*')
       .eq('company_id', companyId)
@@ -226,13 +229,13 @@ export function useStockLocations() {
 // ── Data Intake Logs ──
 export function useDataIntakeLogs() {
   return useCompanyQuery<DataIntakeLog[]>("data_intake_logs", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('data_intake_logs')
       .select('*')
       .eq('company_id', companyId)
       .order('created_at', { ascending: false });
     if (error) throw error;
-    return data || [];
+    return (data || []) as unknown as DataIntakeLog[];
   });
 }
 
@@ -249,7 +252,7 @@ export function useImportSkuFramework() {
       if (parsed.length === 0) throw new Error("No products found in the spreadsheet.");
 
       // Get existing SKUs
-      const { data: existing, error: pErr } = await db
+      const { data: existing, error: pErr } = await supabase
         .from('products').select('sku, id').eq('company_id', companyId);
       if (pErr) throw pErr;
       const existingMap = new Map((existing || []).map((p) => [p.sku, p.id]));
@@ -285,7 +288,7 @@ export function useImportSkuFramework() {
           return {
             company_id: companyId, sku: v.sku, name: v.name,
             category: v.category, row_type: v.row_type, description: v.description,
-            parent_product_id: parentId,
+            parent_product_id: parentId as string | undefined,
           };
         });
         const { data: inserted, error } = await supabase.from('products').insert(batch).select('sku, id');
@@ -389,7 +392,7 @@ export interface PurchasedAddon {
 
 export function usePurchasedAddons() {
   return useCompanyQuery<PurchasedAddon[]>("purchased_addons", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from("purchased_addons")
       .select("*")
       .eq("company_id", companyId)

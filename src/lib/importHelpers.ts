@@ -15,6 +15,7 @@ export interface ImportPreview {
 export interface ImportResult {
   processed: number;
   errors: number;
+  errorMessages: string[];
 }
 
 export type ProgressCallback = (processed: number, errors: number) => void;
@@ -26,8 +27,8 @@ async function fetchAllExisting(table: string, companyId: string, column: string
   const map = new Map<string, string>();
   for (let i = 0; i < values.length; i += BATCH_SIZE) {
     const chunk = values.slice(i, i + BATCH_SIZE);
-    const { data } = await supabase.from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk);
-    for (const row of (data || [])) {
+    const { data } = await (supabase as any).from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk);
+    for (const row of (data || []) as any[]) {
       map.set(row[column], row.id);
     }
   }
@@ -98,6 +99,7 @@ export async function previewMasterImport(rows: ParsedMasterRow[], companyId: st
 
 export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let totalProcessed = 0, totalErrors = 0;
+  const errorMessages: string[] = [];
 
   // 1. Fetch all existing orders in one pass
   const orderNumbers = orders.map(o => o.order_number);
@@ -147,8 +149,9 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
       }
 
       totalProcessed += chunk.length;
-    } catch {
+    } catch (err: any) {
       totalErrors += chunk.length;
+      errorMessages.push(`Rows ${i + 1}–${i + chunk.length}: ${err?.message || 'Unknown error'}`);
     }
     onProgress?.(totalProcessed, totalErrors);
   }
@@ -167,24 +170,27 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
           total_amount: order.total_amount, currency: order.currency, source: order.source,
         }).eq("id", orderId);
 
-        // Replace line items
-        await supabase.from("order_items").delete().eq("order_id", orderId);
+        // Replace line items — check errors to avoid leaving order with no items
+        const { error: deleteErr } = await supabase.from("order_items").delete().eq("order_id", orderId);
+        if (deleteErr) throw deleteErr;
         if (order.line_items.length > 0) {
-          await supabase.from("order_items").insert(order.line_items.map(li => ({
+          const { error: insertErr } = await supabase.from("order_items").insert(order.line_items.map(li => ({
             order_id: orderId, sku: li.sku, quantity: li.quantity, unit_price: li.unit_price, line_total: li.line_total,
           })));
+          if (insertErr) throw insertErr;
         }
 
-        return true;
-      } catch {
-        return false;
+        return { ok: true, msg: '' };
+      } catch (err: any) {
+        return { ok: false, msg: `Order ${order.order_number}: ${err?.message || 'Unknown error'}` };
       }
     });
 
     const results = await Promise.all(updatePromises);
-    const succeeded = results.filter(Boolean).length;
+    const succeeded = results.filter(r => r.ok).length;
     totalProcessed += succeeded;
     totalErrors += results.length - succeeded;
+    results.filter(r => !r.ok && r.msg).forEach(r => errorMessages.push(r.msg));
 
     // Batch insert events for updates
     const eventRows = chunk.map(o => ({
@@ -208,11 +214,12 @@ export async function importWooCommerceOrders(orders: ParsedOrder[], companyId: 
     })), userId);
   }
 
-  return { processed: totalProcessed, errors: totalErrors };
+  return { processed: totalProcessed, errors: totalErrors, errorMessages };
 }
 
 export async function importShipments(shipments: ParsedShipment[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let totalProcessed = 0, totalErrors = 0;
+  const errorMessages: string[] = [];
 
   // 1. Fetch existing orders and shipments in parallel
   const orderNumbers = [...new Set(shipments.filter(s => s.order_number).map(s => s.order_number!))];
@@ -271,8 +278,9 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
       try {
         await supabase.from("shipments").insert(insertData);
         totalProcessed += insertData.length;
-      } catch {
+      } catch (err: any) {
         totalErrors += insertData.length;
+        errorMessages.push(`Shipment batch rows ${i + 1}–${i + insertData.length}: ${err?.message || 'Unknown error'}`);
       }
     }
     // Count skipped (no order_number)
@@ -292,19 +300,23 @@ export async function importShipments(shipments: ParsedShipment[], companyId: st
           carrier_status_detail: s.carrier_status_detail,
           ...(orderId ? { order_id: orderId } : {}),
         }).eq("id", existingShipmentMap.get(s.tracking_number!)!);
-        return true;
-      } catch { return false; }
+        return { ok: true, msg: '' };
+      } catch (err: any) {
+        return { ok: false, msg: `Tracking ${s.tracking_number}: ${err?.message || 'Unknown error'}` };
+      }
     }));
-    totalProcessed += results.filter(Boolean).length;
-    totalErrors += results.filter(r => !r).length;
+    totalProcessed += results.filter(r => r.ok).length;
+    totalErrors += results.filter(r => !r.ok).length;
+    results.filter(r => !r.ok && r.msg).forEach(r => errorMessages.push(r.msg));
     onProgress?.(totalProcessed, totalErrors);
   }
 
-  return { processed: totalProcessed, errors: totalErrors };
+  return { processed: totalProcessed, errors: totalErrors, errorMessages };
 }
 
 export async function importMasterRows(rows: ParsedMasterRow[], companyId: string, userId: string, onProgress?: ProgressCallback): Promise<ImportResult> {
   let totalProcessed = 0, totalErrors = 0;
+  const errorMessages: string[] = [];
 
   // 1. Fetch existing orders and shipments
   const orderNumbers = rows.map(r => r.order_number);
@@ -334,8 +346,9 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
         existingOrderMap.set(row.order_number, row.id);
       }
       totalProcessed += chunk.length;
-    } catch {
+    } catch (err: any) {
       totalErrors += chunk.length;
+      errorMessages.push(`Master rows ${i + 1}–${i + chunk.length}: ${err?.message || 'Unknown error'}`);
     }
     onProgress?.(totalProcessed, totalErrors);
   }
@@ -349,11 +362,14 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
           order_date: r.order_date, status: r.status, woo_status: r.woo_status,
           customer_name: r.customer_name, total_amount: r.total_amount, source: "woocommerce",
         }).eq("id", existingOrderMap.get(r.order_number)!);
-        return true;
-      } catch { return false; }
+        return { ok: true, msg: '' };
+      } catch (err: any) {
+        return { ok: false, msg: `Order ${r.order_number}: ${err?.message || 'Unknown error'}` };
+      }
     }));
-    totalProcessed += results.filter(Boolean).length;
-    totalErrors += results.filter(r => !r).length;
+    totalProcessed += results.filter(r => r.ok).length;
+    totalErrors += results.filter(r => !r.ok).length;
+    results.filter(r => !r.ok && r.msg).forEach(r => errorMessages.push(r.msg));
     onProgress?.(totalProcessed, totalErrors);
   }
 
@@ -411,7 +427,7 @@ export async function importMasterRows(rows: ParsedMasterRow[], companyId: strin
     })), userId);
   }
 
-  return { processed: totalProcessed, errors: totalErrors };
+  return { processed: totalProcessed, errors: totalErrors, errorMessages };
 }
 
 // ── On-hold exception helper (batched) ──
