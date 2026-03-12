@@ -1118,6 +1118,56 @@ export type Database = {
           },
         ]
       }
+      woocommerce_integrations: {
+        Row: {
+          company_id: string
+          consumer_key: string
+          consumer_secret: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_order_count: number | null
+          last_sync_status: string | null
+          store_url: string
+          updated_at: string
+        }
+        Insert: {
+          company_id: string
+          consumer_key: string
+          consumer_secret: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_order_count?: number | null
+          last_sync_status?: string | null
+          store_url: string
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string
+          consumer_key?: string
+          consumer_secret?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_order_count?: number | null
+          last_sync_status?: string | null
+          store_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "woocommerce_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
