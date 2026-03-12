@@ -68,7 +68,7 @@ export default function AcceptInvitePage() {
     try {
       const { data, error } = await supabase.rpc("accept_invitation_by_code", { _code: inviteCode.trim() });
       if (error) throw error;
-      if (!data?.success) {
+      if (!(data as any)?.success) {
         const next = failedAttempts + 1;
         setFailedAttempts(next);
         // Exponential backoff: 5s, 10s, 20s, 40s, max 60s

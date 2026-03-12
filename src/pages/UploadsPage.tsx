@@ -142,7 +142,7 @@ export default function UploadsPage() {
     };
 
     try {
-      let result = { processed: 0, errors: 0 };
+      let result: { processed: number; errors: number; errorMessages?: string[] } = { processed: 0, errors: 0 };
       if (type === "woocommerce") {
         result = await importWooCommerceOrders(data as ParsedOrder[], currentCompany.id, user.id, onProgress);
       } else if (type === "shipment") {
