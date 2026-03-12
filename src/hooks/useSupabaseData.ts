@@ -126,7 +126,7 @@ export function useStockMovementsByProduct(productId: string | undefined) {
   return useQuery<StockMovement[]>({
     queryKey: ["stock_movements_product", productId, currentCompany?.id],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('stock_movements')
         .select('*')
         .eq('company_id', currentCompany!.id)
