@@ -93,25 +93,23 @@ describe("UploadsPage", () => {
   it("renders the page title and source selector buttons", () => {
     renderPage();
     expect(screen.getByText("Data Intake")).toBeInTheDocument();
-    expect(screen.getByText("WooCommerce")).toBeInTheDocument();
-    expect(screen.getByText("Pirate Ship")).toBeInTheDocument();
-    expect(screen.getByText("Master XLSX")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "WooCommerce" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Pirate Ship" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Master XLSX" })).toBeInTheDocument();
   });
 
   it("highlights the selected source button", () => {
     renderPage();
-    const wooButton = screen.getByText("WooCommerce");
-    // WooCommerce is selected by default — should have primary styling
+    const wooButton = screen.getByRole("button", { name: "WooCommerce" });
     expect(wooButton.className).toContain("bg-primary");
   });
 
   it("switches selected source on click", () => {
     renderPage();
-    const pirateButton = screen.getByText("Pirate Ship");
+    const pirateButton = screen.getByRole("button", { name: "Pirate Ship" });
     fireEvent.click(pirateButton);
     expect(pirateButton.className).toContain("bg-primary");
-    // WooCommerce should no longer be primary
-    const wooButton = screen.getByText("WooCommerce");
+    const wooButton = screen.getByRole("button", { name: "WooCommerce" });
     expect(wooButton.className).not.toContain("bg-primary");
   });
 
