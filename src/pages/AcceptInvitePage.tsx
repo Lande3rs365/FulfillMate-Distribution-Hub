@@ -22,11 +22,24 @@ export default function AcceptInvitePage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { setCurrentCompany } = useCompany();
-  
+
   const token = searchParams.get("token");
   const [inviteCode, setInviteCode] = useState(searchParams.get("code") || "");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<InviteResult | null>(null);
+  const [failedAttempts, setFailedAttempts] = useState(0);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [cooldownLeft, setCooldownLeft] = useState(0);
+
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) { setCooldownLeft(0); return; }
+    const id = setInterval(() => {
+      const left = Math.ceil((cooldownUntil - Date.now()) / 1000);
+      if (left <= 0) { setCooldownLeft(0); clearInterval(id); }
+      else setCooldownLeft(left);
+    }, 500);
+    return () => clearInterval(id);
+  }, [cooldownUntil]);
 
   // Auto-accept if token is in URL
   useEffect(() => {
@@ -50,11 +63,19 @@ export default function AcceptInvitePage() {
 
   const acceptByCode = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inviteCode.trim()) return;
+    if (!inviteCode.trim() || cooldownLeft > 0) return;
     setLoading(true);
     try {
       const { data, error } = await supabase.rpc("accept_invitation_by_code", { _code: inviteCode.trim() });
       if (error) throw error;
+      if (!data?.success) {
+        const next = failedAttempts + 1;
+        setFailedAttempts(next);
+        // Exponential backoff: 5s, 10s, 20s, 40s, max 60s
+        const delaySec = Math.min(5 * Math.pow(2, next - 1), 60);
+        setCooldownUntil(Date.now() + delaySec * 1000);
+        setCooldownLeft(delaySec);
+      }
       handleResult(data);
     } catch (err: any) {
       setResult({ success: false, message: err.message || "Failed to accept invitation." });
@@ -132,12 +153,12 @@ export default function AcceptInvitePage() {
                   value={inviteCode}
                   onChange={e => setInviteCode(e.target.value.toUpperCase())}
                   className="text-center font-mono tracking-widest text-lg"
-                  maxLength={8}
+                  maxLength={12}
                   required
                 />
               </div>
-              <Button type="submit" className="w-full">
-                Join Company
+              <Button type="submit" className="w-full" disabled={cooldownLeft > 0}>
+                {cooldownLeft > 0 ? `Try again in ${cooldownLeft}s` : "Join Company"}
               </Button>
             </form>
           )}
