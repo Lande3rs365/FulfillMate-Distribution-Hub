@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, act } from "@testing-library/react";
 import { createElement } from "react";
 import { MemoryRouter, Routes, Route } from "react-router-dom";
 
@@ -94,9 +94,11 @@ describe("AuthContext", () => {
     expect(mockSignOut).toHaveBeenCalledOnce();
   });
 
-  it("subscribes to auth state changes on mount", () => {
+  it("subscribes to auth state changes on mount", async () => {
     mockGetSession.mockResolvedValue({ data: { session: null } });
-    render(createElement(AuthProvider, null, createElement("div")));
+    await act(async () => {
+      render(createElement(AuthProvider, null, createElement("div")));
+    });
     expect(mockOnAuthStateChange).toHaveBeenCalledOnce();
   });
 

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
+import { renderHook, waitFor, act } from "@testing-library/react";
 import { createElement, type ReactNode } from "react";
 
 vi.mock("@/integrations/supabase/client", () => ({
@@ -81,7 +81,9 @@ describe("CompanyContext", () => {
     await waitFor(() => expect(result.current.loading).toBe(false));
 
     const company = { id: "co-2", name: "Beta Corp", code: "BET", created_at: "", updated_at: "" };
-    result.current.setCurrentCompany(company);
+    act(() => {
+      result.current.setCurrentCompany(company);
+    });
 
     await waitFor(() => expect(result.current.currentCompany?.id).toBe("co-2"));
     expect(localStorage.getItem("distrohub_company_id")).toBe("co-2");
