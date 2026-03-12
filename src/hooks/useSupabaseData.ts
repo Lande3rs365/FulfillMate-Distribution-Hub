@@ -424,6 +424,7 @@ export interface WooIntegration {
   store_url: string;
   consumer_key: string;
   consumer_secret: string;
+  sync_interval_minutes: number;
   last_sync_at: string | null;
   last_sync_order_count: number;
   last_sync_status: string;
