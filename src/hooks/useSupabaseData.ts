@@ -30,7 +30,7 @@ export function useOrders() {
     let page = 0;
     let hasMore = true;
     while (hasMore) {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('orders')
         .select('*, order_items(*)')
         .eq('company_id', companyId)
