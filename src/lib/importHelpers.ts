@@ -22,12 +22,12 @@ export type ProgressCallback = (processed: number, errors: number) => void;
 // ── Helpers ──
 
 /** Fetch all existing records in batches to avoid the 1000-row PostgREST limit */
-async function fetchAllExisting(table: string, companyId: string, column: string, values: string[]): Promise<Map<string, string>> {
+async function fetchAllExisting(table: 'orders' | 'shipments' | 'products', companyId: string, column: string, values: string[]): Promise<Map<string, string>> {
   const map = new Map<string, string>();
   for (let i = 0; i < values.length; i += BATCH_SIZE) {
     const chunk = values.slice(i, i + BATCH_SIZE);
-    const { data } = await supabase.from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk);
-    for (const row of (data || [])) {
+    const { data } = await supabase.from(table).select(`id, ${column}`).eq("company_id", companyId).in(column, chunk as any);
+    for (const row of (data || []) as any[]) {
       map.set(row[column], row.id);
     }
   }
