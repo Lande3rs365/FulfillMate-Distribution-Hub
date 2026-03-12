@@ -84,7 +84,7 @@ export function useOrderShipments(orderId: string | undefined) {
   return useQuery<Shipment[]>({
     queryKey: ["order_shipments", orderId],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('shipments')
         .select('*')
         .eq('order_id', orderId)
