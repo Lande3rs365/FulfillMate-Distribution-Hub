@@ -67,7 +67,7 @@ export function useOrderEvents(orderId: string | undefined) {
   return useQuery<OrderEvent[]>({
     queryKey: ["order_events", orderId],
     queryFn: async () => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('order_events')
         .select('*')
         .eq('order_id', orderId)
