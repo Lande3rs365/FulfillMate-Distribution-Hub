@@ -158,7 +158,7 @@ export function useReturns() {
   return useCompanyQuery<(Return & { orders: Pick<Order, 'order_number'> | null })[]>(
     "returns",
     async (companyId) => {
-      const { data, error } = await db
+      const { data, error } = await supabase
         .from('returns')
         .select('*, orders(order_number)')
         .eq('company_id', companyId)
