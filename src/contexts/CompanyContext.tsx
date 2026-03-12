@@ -43,7 +43,7 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
     async function fetchCompanies() {
       setLoading(true);
 
-      const { data: memberships } = await (supabase as any)
+      const { data: memberships } = await supabase
         .from("user_companies")
         .select("company_id")
         .eq("user_id", user.id);
@@ -57,8 +57,8 @@ export function CompanyProvider({ children }: { children: ReactNode }) {
         return;
       }
 
-      const companyIds = memberships.map((m: any) => m.company_id);
-      const { data: companyData } = await (supabase as any)
+      const companyIds = memberships.map((m) => m.company_id);
+      const { data: companyData } = await supabase
         .from("companies")
         .select("*")
         .in("id", companyIds);
