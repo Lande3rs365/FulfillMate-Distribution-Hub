@@ -14,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from "@/components/ui/select";
+import {
   Eye, EyeOff, Loader2, CheckCircle2, XCircle, AlertTriangle, RefreshCw, Plug, Calendar,
 } from "lucide-react";
 import { format } from "date-fns";
