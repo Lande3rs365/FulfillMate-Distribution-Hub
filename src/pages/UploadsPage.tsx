@@ -31,6 +31,7 @@ interface UploadProgress {
   processed: number;
   errors: number;
   message?: string;
+  errorMessages?: string[];
 }
 
 interface PendingImport {
@@ -158,7 +159,7 @@ export default function UploadsPage() {
         uploaded_by: user.id, started_at: new Date().toISOString(), completed_at: new Date().toISOString(),
       });
 
-      setUploading({ fileName, status: "done", total: preview.totalRows, processed: result.processed, errors: result.errors });
+      setUploading({ fileName, status: "done", total: preview.totalRows, processed: result.processed, errors: result.errors, errorMessages: result.errorMessages });
       setLastSummary({
         selectedSource: selSrc,
         detectedSource: detectedSource === "pirate_ship" ? "Pirate Ship" : detectedSource === "woocommerce" ? "WooCommerce" : detectedSource === "master_xlsx" ? "Master XLSX" : "Unknown",
@@ -417,6 +418,16 @@ export default function UploadsPage() {
                 {uploading.status === "done" && `Done — ${uploading.processed} imported, ${uploading.errors} errors`}
                 {uploading.status === "error" && (uploading.message || "Import failed")}
               </p>
+              {uploading.status === "done" && uploading.errorMessages && uploading.errorMessages.length > 0 && (
+                <ul className="mt-1 space-y-0.5 max-h-24 overflow-y-auto">
+                  {uploading.errorMessages.slice(0, 10).map((msg, i) => (
+                    <li key={i} className="text-xs text-destructive">{msg}</li>
+                  ))}
+                  {uploading.errorMessages.length > 10 && (
+                    <li className="text-xs text-muted-foreground">…and {uploading.errorMessages.length - 10} more</li>
+                  )}
+                </ul>
+              )}
             </div>
             {uploading.status === "importing" && uploading.total > 0 && (
               <span className="text-sm font-mono font-bold text-primary">
