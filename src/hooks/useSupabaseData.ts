@@ -198,7 +198,7 @@ export function useExceptions() {
 // ── Products ──
 export function useProducts() {
   return useCompanyQuery<Product[]>("products", async (companyId) => {
-    const { data, error } = await db
+    const { data, error } = await supabase
       .from('products')
       .select('*')
       .eq('company_id', companyId)
