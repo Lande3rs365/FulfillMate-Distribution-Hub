@@ -931,6 +931,59 @@ export type Database = {
           },
         ]
       }
+      shipstation_integrations: {
+        Row: {
+          api_key: string
+          api_secret: string
+          company_id: string
+          created_at: string
+          id: string
+          last_sync_at: string | null
+          last_sync_error: string | null
+          last_sync_order_count: number | null
+          last_sync_shipment_count: number | null
+          last_sync_status: string | null
+          sync_interval_minutes: number
+          updated_at: string
+        }
+        Insert: {
+          api_key: string
+          api_secret: string
+          company_id: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_order_count?: number | null
+          last_sync_shipment_count?: number | null
+          last_sync_status?: string | null
+          sync_interval_minutes?: number
+          updated_at?: string
+        }
+        Update: {
+          api_key?: string
+          api_secret?: string
+          company_id?: string
+          created_at?: string
+          id?: string
+          last_sync_at?: string | null
+          last_sync_error?: string | null
+          last_sync_order_count?: number | null
+          last_sync_shipment_count?: number | null
+          last_sync_status?: string | null
+          sync_interval_minutes?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipstation_integrations_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_locations: {
         Row: {
           code: string
@@ -1082,6 +1135,44 @@ export type Database = {
             columns: ["to_location_id"]
             isOneToOne: false
             referencedRelation: "stock_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tawk_settings: {
+        Row: {
+          company_id: string
+          created_at: string
+          id: string
+          is_enabled: boolean
+          property_id: string
+          updated_at: string
+          widget_id: string
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          property_id: string
+          updated_at?: string
+          widget_id?: string
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          id?: string
+          is_enabled?: boolean
+          property_id?: string
+          updated_at?: string
+          widget_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tawk_settings_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
             referencedColumns: ["id"]
           },
         ]
