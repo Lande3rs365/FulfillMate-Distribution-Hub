@@ -216,7 +216,8 @@ export default function IntegrationsPage() {
         setSsProgress(`Importing ${orders.length} orders...`);
         const BATCH = 50;
         for (let i = 0; i < orders.length; i += BATCH) {
-          const batch = orders.slice(i, i + BATCH).map((o: any) => ({
+          const batch = orders.slice(i, i + BATCH);
+          const orderRows = batch.map((o: any) => ({
             company_id: currentCompany.id,
             order_number: String(o.orderNumber || ""),
             order_date: o.orderDate || null,
@@ -232,7 +233,7 @@ export default function IntegrationsPage() {
           if (orderRows.length > 0) {
             await supabase.from("orders").upsert(orderRows, { onConflict: "company_id,order_number", ignoreDuplicates: false });
           }
-          orderCount += batch.length;
+          orderCount += orderRows.length;
         }
       }
 
