@@ -181,7 +181,7 @@ export default function ExportsPage() {
   return <ExportsContent />;
 }
 
-export function ExportsContent() {
+export function ExportsContent({ embedded = false }: { embedded?: boolean }) {
   const { currentCompany } = useCompany();
   const [loading, setLoading] = useState<ExportKey | null>(null);
 
