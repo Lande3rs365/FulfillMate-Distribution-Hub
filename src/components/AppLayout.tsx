@@ -60,6 +60,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <PullToRefresh onRefresh={handleRefresh}>
           {children}
         </PullToRefresh>
+
+        {isMobile && <MobileBottomTabs />}
       </div>
 
       {tawkSettings?.is_enabled && tawkSettings?.property_id && (
