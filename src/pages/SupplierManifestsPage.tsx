@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import KpiCard from "@/components/KpiCard";
 import {
   Ship, Search, Package, AlertTriangle, Clock, CheckCircle,
   Plus, X, Truck, Calendar
