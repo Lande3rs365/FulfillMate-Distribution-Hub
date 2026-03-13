@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Building2, MapPin, Users, Save, Loader2, Plus, Trash2, Copy,
   Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug, Shield, User,
-  Bot, Sparkles, MessageSquare, Bell, Search, Zap, Clock, CheckCircle2,
+  Bot, Sparkles, MessageSquare, Bell, Search, Zap, Clock, CheckCircle2, ArrowRight,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -874,8 +874,7 @@ function TeamTab() {
 function AIAgentComingSoon() {
   const coreFeatures = [
     { icon: Bell, title: "Auto Customer Updates", desc: "Proactive dispatch & delivery notifications — customers stop asking 'where's my order?'" },
-    { icon: Search, title: "Tracking Chase", desc: "Automatically chases missing tracking numbers from carriers and distributors until resolved" },
-    { icon: MessageSquare, title: "Inbox Monitoring", desc: "Monitors dedicated distribution & customer support emails, plus Tawk.to & Zendesk — reads, classifies, and routes automatically" },
+    { icon: Search, title: "Tracking Chase", desc: "Automatically chases missing tracking numbers from carriers and distributors — persistent, polite, relentless" },
     { icon: Zap, title: "Order Matching", desc: "Matches incoming responses to the right orders and updates records instantly — zero manual work" },
     { icon: Clock, title: "EOD Team Briefings", desc: "End-of-day summaries straight to WhatsApp — orders shipped, exceptions raised, stock alerts" },
     { icon: CheckCircle2, title: "Full Audit Trail", desc: "Every action logged, every message traceable — complete operational visibility" },
@@ -886,7 +885,7 @@ function AIAgentComingSoon() {
       phase: "Phase 1",
       label: "Zero Manual Order Chasing",
       hook: "I need this today",
-      status: "Building Now",
+      status: "In Development",
       items: [
         { name: "Shopify + WooCommerce Sync", desc: "All your sales channels feeding orders into one place — no more copy-pasting between platforms" },
         { name: "EasyPost Unified Tracking", desc: "Live tracking webhooks for 100+ carriers — you'll never manually chase a tracking number again" },
@@ -934,13 +933,13 @@ function AIAgentComingSoon() {
   ];
 
   const phaseColors: Record<string, string> = {
-    "Building Now": "bg-primary/15 text-primary border-primary/25",
+    "In Development": "bg-primary/15 text-primary border-primary/25",
     "Next Up": "bg-accent/50 text-accent-foreground border-accent/30",
     "Planned": "bg-muted text-muted-foreground border-border",
   };
 
   const phaseEmoji: Record<string, string> = {
-    "Building Now": "🔥",
+    "In Development": "🔥",
     "Next Up": "⚡",
     "Planned": "🗺️",
   };
@@ -973,13 +972,29 @@ function AIAgentComingSoon() {
               <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                 <Zap className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">On average, beta users cut customer service emails by 60%</span>
-                <span className="text-muted-foreground"> in the first week.</span>
+              <p className="text-sm text-muted-foreground">
+                Early testers expect to <span className="font-semibold text-foreground">cut customer service emails by over half</span> in week one.
               </p>
             </div>
           </div>
         </div>
+      </div>
+
+      {/* How it connects — visual flow */}
+      <div className="flex items-center justify-center gap-3 sm:gap-5 py-2">
+        {[
+          { label: "Your Channels", sub: "Shopify · WooCommerce · eBay · Amazon" },
+          { label: "FulfillMate AI Agent", sub: "Reads · Matches · Chases · Logs" },
+          { label: "Customers + Team + Records", sub: "Updated automatically" },
+        ].map((step, i) => (
+          <div key={step.label} className="flex items-center gap-3 sm:gap-5">
+            <div className="text-center">
+              <p className="text-xs sm:text-sm font-semibold text-foreground">{step.label}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{step.sub}</p>
+            </div>
+            {i < 2 && <ArrowRight className="w-4 h-4 text-primary shrink-0" />}
+          </div>
+        ))}
       </div>
 
       {/* Core feature grid */}
@@ -1049,7 +1064,7 @@ function AIAgentComingSoon() {
             <p className="text-xs text-muted-foreground">We'll notify you as soon as the AI Agent is ready for your account.</p>
           </div>
           <Button size="sm" className="shrink-0 gap-1.5">
-            <Bell className="w-3.5 h-3.5" /> Notify Me
+            <Sparkles className="w-3.5 h-3.5" /> Get Early Access
           </Button>
         </CardContent>
       </Card>
