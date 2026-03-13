@@ -1,9 +1,10 @@
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import KpiCard from "@/components/KpiCard";
 import { useOrders } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
-import { Package, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
+import { Package, Search, ArrowUpDown, ArrowUp, ArrowDown, Clock, CheckCircle, AlertTriangle } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
