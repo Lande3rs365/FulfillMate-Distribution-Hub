@@ -18,7 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Building2, MapPin, Users, Save, Loader2, Plus, Trash2, Copy,
   Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug, Shield, User,
-  Bot, Sparkles, MessageSquare, Bell, Search, Zap, Clock, CheckCircle2,
+  Bot, Sparkles, MessageSquare, Bell, Search, Zap, Clock, CheckCircle2, ArrowRight,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
