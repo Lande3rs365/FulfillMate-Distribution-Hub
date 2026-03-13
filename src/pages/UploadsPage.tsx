@@ -1,6 +1,6 @@
 import {
   Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Eye, AlertTriangle, Info,
-  ShoppingCart, Ship, Anchor, FileDown, Package, Truck, Clock,
+  FileDown, Package, Truck, Clock,
 } from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -24,14 +24,17 @@ import {
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
 import { toast } from "@/hooks/use-toast";
+import wooLogo from "@/assets/logo-woocommerce.svg";
+import shipstationLogo from "@/assets/logo-shipstation.png";
+import pirateshipLogo from "@/assets/logo-pirateship.png";
 
 const SOURCES = [
-  { key: 'WooCommerce', icon: ShoppingCart, description: 'Import customer orders from WooCommerce CSV exports', color: 'text-purple-600 dark:text-purple-400', bg: 'bg-purple-100 dark:bg-purple-900/30' },
-  { key: 'Pirate Ship', icon: Ship, description: 'Import shipment tracking from Pirate Ship CSV exports', color: 'text-sky-600 dark:text-sky-400', bg: 'bg-sky-100 dark:bg-sky-900/30' },
-  { key: 'ShipStation', icon: Anchor, description: 'Import shipment tracking from ShipStation CSV exports', color: 'text-blue-600 dark:text-blue-400', bg: 'bg-blue-100 dark:bg-blue-900/30' },
-  { key: 'Master XLSX', icon: FileSpreadsheet, description: 'Combined orders + shipments from a single Excel file', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
-  { key: 'Inventory / Stock', icon: Package, description: 'Import stock levels and inventory adjustments', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
-  { key: 'Manufacturer Inbound', icon: Truck, description: 'Import inbound supplier/manufacturer manifests', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
+  { key: 'WooCommerce', logo: wooLogo, icon: null as any, description: 'Import customer orders from WooCommerce CSV exports', color: '', bg: '' },
+  { key: 'Pirate Ship', logo: pirateshipLogo, icon: null as any, description: 'Import shipment tracking from Pirate Ship CSV exports', color: '', bg: '' },
+  { key: 'ShipStation', logo: shipstationLogo, icon: null as any, description: 'Import shipment tracking from ShipStation CSV exports', color: '', bg: '' },
+  { key: 'Master XLSX', logo: null as string | null, icon: FileSpreadsheet, description: 'Combined orders + shipments from a single Excel file', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-100 dark:bg-emerald-900/30' },
+  { key: 'Inventory / Stock', logo: null as string | null, icon: Package, description: 'Import stock levels and inventory adjustments', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-100 dark:bg-amber-900/30' },
+  { key: 'Manufacturer Inbound', logo: null as string | null, icon: Truck, description: 'Import inbound supplier/manufacturer manifests', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-100 dark:bg-rose-900/30' },
 ];
 const sources = SOURCES.map(s => s.key);
 
