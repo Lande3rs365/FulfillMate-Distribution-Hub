@@ -270,6 +270,7 @@ function TeamTab() {
   const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
   const [changingRole, setChangingRole] = useState<string | null>(null);
+  const [pendingRoles, setPendingRoles] = useState<Record<string, string>>({});
 
   // Fetch members
   const { data: members = [] } = useQuery<TeamMember[]>({
