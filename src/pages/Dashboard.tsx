@@ -113,10 +113,10 @@ export default function Dashboard() {
   const periodLabels: Record<Period, string> = { week: "This Week", month: "This Month", all: "All Time" };
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between flex-wrap gap-3">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">Operations Dashboard</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Operations Dashboard</h1>
           <p className="text-sm text-muted-foreground">{currentCompany.name} · Distribution & Inventory Control Hub</p>
         </div>
         <div className="flex items-center gap-2">
