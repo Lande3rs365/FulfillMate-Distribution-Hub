@@ -235,24 +235,46 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
         </div>
       )}
 
-      {/* Source selector */}
-      <div className="flex gap-2 flex-wrap">
-        {sources.map(s => (
-          <button
-            key={s}
-            onClick={() => { setSelectedSource(s); setPending(null); setLastSummary(null); }}
-            disabled={!!uploading}
-            className={cn(
-              "px-4 py-2 rounded-md text-sm border transition-colors",
-              s === selectedSource
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border hover:border-primary/50",
-              uploading && "opacity-50 cursor-not-allowed"
-            )}
-          >
-            {s}
-          </button>
-        ))}
+      {/* Source cards — Exports-style rows */}
+      <div className="grid gap-3">
+        {SOURCES.map(({ key, icon: Icon, description, color, bg }) => {
+          const isSelected = selectedSource === key;
+          const isUnavailable = key === 'Inventory / Stock' || key === 'Manufacturer Inbound';
+          return (
+            <button
+              key={key}
+              onClick={() => { if (!isUnavailable) { setSelectedSource(key); setPending(null); setLastSummary(null); } }}
+              disabled={!!uploading || isUnavailable}
+              className={cn(
+                "bg-card border rounded-lg p-4 flex items-center gap-4 text-left transition-colors w-full",
+                isSelected && !isUnavailable
+                  ? "border-primary ring-1 ring-primary/20"
+                  : "border-border hover:border-primary/30",
+                isUnavailable && "opacity-50 cursor-not-allowed",
+                uploading && !isUnavailable && "opacity-50 cursor-not-allowed"
+              )}
+            >
+              <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center shrink-0", bg)}>
+                <Icon className={cn("w-5 h-5", color)} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground">{key}</p>
+                <p className="text-sm text-muted-foreground">{description}</p>
+              </div>
+              {isUnavailable ? (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-muted text-muted-foreground rounded-md text-xs shrink-0">
+                  <Clock className="w-3.5 h-3.5" /> Coming soon
+                </span>
+              ) : isSelected ? (
+                <span className="flex items-center gap-1.5 px-3 py-1.5 bg-primary/10 text-primary rounded-md text-xs font-medium shrink-0">
+                  <Check className="w-3.5 h-3.5" /> Selected
+                </span>
+              ) : (
+                <span className="px-3 py-1.5 text-muted-foreground text-xs shrink-0">Select</span>
+              )}
+            </button>
+          );
+        })}
       </div>
 
       {/* Destination info note */}
@@ -260,7 +282,7 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
         <div className="flex items-start gap-2 p-3 rounded-md bg-muted/30 border border-border/50 text-xs text-muted-foreground">
           <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
           <span>
-            <strong className="text-foreground">{sourceInfo.label}</strong> CSVs write to the <strong className="text-foreground font-mono">{sourceInfo.destinationTable}</strong> table and appear on the <strong className="text-foreground">{sourceInfo.destinationPage}</strong> page.
+            <strong className="text-foreground">{sourceInfo.label}</strong> files write to the <strong className="text-foreground font-mono">{sourceInfo.destinationTable}</strong> table and appear on the <strong className="text-foreground">{sourceInfo.destinationPage}</strong> page.
           </span>
         </div>
       )}
