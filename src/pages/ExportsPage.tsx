@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import { FileDown, Loader2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useCompany } from "@/contexts/CompanyContext";
@@ -181,7 +182,7 @@ export default function ExportsPage() {
   return <ExportsContent />;
 }
 
-export function ExportsContent() {
+export function ExportsContent({ embedded = false }: { embedded?: boolean }) {
   const { currentCompany } = useCompany();
   const [loading, setLoading] = useState<ExportKey | null>(null);
 
@@ -206,11 +207,13 @@ export function ExportsContent() {
   };
 
   return (
-    <div className="p-6 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Exports</h1>
-        <p className="text-sm text-muted-foreground">Generate CSV exports for support and operations</p>
-      </div>
+    <div className={cn(embedded ? "space-y-6" : "p-6 space-y-6")}>
+      {!embedded && (
+        <div>
+          <h1 className="text-2xl font-bold">Exports</h1>
+          <p className="text-sm text-muted-foreground">Generate CSV exports for support and operations</p>
+        </div>
+      )}
 
       <div className="grid gap-3">
         {EXPORTS.map(({ key, name, description }) => {
