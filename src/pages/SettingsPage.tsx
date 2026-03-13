@@ -14,13 +14,16 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Building2, MapPin, Users, Save, Loader2, Plus, Trash2, Copy,
-  Mail, UserPlus, X, Crown, Lock,
+  Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug,
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
 import { useExtraSeats } from "@/hooks/useSupabaseData";
 import { Coffee } from "lucide-react";
 import type { StockLocation } from "@/types/database";
+import { DataIntakeContent } from "@/pages/UploadsPage";
+import { ExportsContent } from "@/pages/ExportsPage";
+import { IntegrationsContent } from "@/pages/IntegrationsPage";
 
 // ─── Company Details Tab ────────────────────────────────────────────
 function CompanyDetailsTab() {
@@ -522,12 +525,19 @@ function TeamTab() {
 
 // ─── Settings Page ──────────────────────────────────────────────────
 export default function SettingsPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") || "company";
+
+  const handleTabChange = (value: string) => {
+    setSearchParams({ tab: value }, { replace: true });
+  };
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-foreground">Settings</h1>
 
-      <Tabs defaultValue="company" className="w-full">
-        <TabsList className="mb-4">
+      <Tabs value={tab} onValueChange={handleTabChange} className="w-full">
+        <TabsList className="mb-4 flex-wrap h-auto gap-1">
           <TabsTrigger value="company" className="gap-1.5">
             <Building2 className="w-3.5 h-3.5" /> Company
           </TabsTrigger>
@@ -536,6 +546,15 @@ export default function SettingsPage() {
           </TabsTrigger>
           <TabsTrigger value="team" className="gap-1.5">
             <Users className="w-3.5 h-3.5" /> Team
+          </TabsTrigger>
+          <TabsTrigger value="integrations" className="gap-1.5">
+            <Plug className="w-3.5 h-3.5" /> Integrations
+          </TabsTrigger>
+          <TabsTrigger value="data-intake" className="gap-1.5">
+            <Upload className="w-3.5 h-3.5" /> Data Intake
+          </TabsTrigger>
+          <TabsTrigger value="exports" className="gap-1.5">
+            <FileText className="w-3.5 h-3.5" /> Exports
           </TabsTrigger>
         </TabsList>
 
@@ -547,6 +566,15 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="team">
           <TeamTab />
+        </TabsContent>
+        <TabsContent value="integrations">
+          <IntegrationsContent />
+        </TabsContent>
+        <TabsContent value="data-intake">
+          <DataIntakeContent />
+        </TabsContent>
+        <TabsContent value="exports">
+          <ExportsContent />
         </TabsContent>
       </Tabs>
     </div>
