@@ -457,6 +457,7 @@ function TeamTab() {
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [pendingRoles, setPendingRoles] = useState<Record<string, string>>({});
   const [ownerConfirm, setOwnerConfirm] = useState<{ membershipId: string; userId: string; name: string } | null>(null);
+  const [removeConfirm, setRemoveConfirm] = useState<{ membershipId: string; name: string } | null>(null);
 
   // Fetch members
   const { data: members = [] } = useQuery<TeamMember[]>({
