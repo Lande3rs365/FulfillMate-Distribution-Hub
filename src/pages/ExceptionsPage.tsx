@@ -338,10 +338,12 @@ export default function ExceptionsPage() {
                 Other Exceptions ({sortedActive.other.length})
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>{renderSortableHeader(true, sortedActive.other.map(e => e.id))}</TableHeader>
                   <TableBody>{sortedActive.other.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
+                </div>
               </div>
             </div>
           )}
