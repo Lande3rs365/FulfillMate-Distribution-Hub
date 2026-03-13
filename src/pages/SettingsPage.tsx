@@ -531,6 +531,7 @@ function TeamTab() {
     setRemoveConfirm(null);
   };
 
+  const { data: invitations = [] } = useQuery<Invitation[]>({
     queryKey: ["invitations", currentCompany?.id],
     queryFn: async () => {
       const { data, error } = await supabase
