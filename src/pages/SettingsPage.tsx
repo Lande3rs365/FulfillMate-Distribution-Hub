@@ -972,9 +972,8 @@ function AIAgentComingSoon() {
               <div className="w-8 h-8 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
                 <Zap className="w-4 h-4 text-primary" />
               </div>
-              <p className="text-sm text-foreground">
-                <span className="font-semibold">On average, beta users cut customer service emails by 60%</span>
-                <span className="text-muted-foreground"> in the first week.</span>
+              <p className="text-sm text-muted-foreground">
+                Early testers expect to <span className="font-semibold text-foreground">cut customer service emails by over half</span> in week one.
               </p>
             </div>
           </div>
