@@ -980,6 +980,23 @@ function AIAgentComingSoon() {
         </div>
       </div>
 
+      {/* How it connects — visual flow */}
+      <div className="flex items-center justify-center gap-3 sm:gap-5 py-2">
+        {[
+          { label: "Your Channels", sub: "Shopify · WooCommerce · eBay · Amazon" },
+          { label: "FulfillMate AI Agent", sub: "Reads · Matches · Chases · Logs" },
+          { label: "Customers + Team + Records", sub: "Updated automatically" },
+        ].map((step, i) => (
+          <div key={step.label} className="flex items-center gap-3 sm:gap-5">
+            <div className="text-center">
+              <p className="text-xs sm:text-sm font-semibold text-foreground">{step.label}</p>
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">{step.sub}</p>
+            </div>
+            {i < 2 && <ArrowRight className="w-4 h-4 text-primary shrink-0" />}
+          </div>
+        ))}
+      </div>
+
       {/* Core feature grid */}
       <div>
         <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">Core Capabilities</h3>
