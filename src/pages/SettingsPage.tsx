@@ -7,6 +7,7 @@ import { useStockLocations } from "@/hooks/useSupabaseData";
 import { toast } from "@/hooks/use-toast";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -271,6 +272,7 @@ function TeamTab() {
   const [sending, setSending] = useState(false);
   const [changingRole, setChangingRole] = useState<string | null>(null);
   const [pendingRoles, setPendingRoles] = useState<Record<string, string>>({});
+  const [ownerConfirm, setOwnerConfirm] = useState<{ membershipId: string; userId: string; name: string } | null>(null);
 
   // Fetch members
   const { data: members = [] } = useQuery<TeamMember[]>({
@@ -473,8 +475,13 @@ function TeamTab() {
                           className="h-8 text-xs gap-1"
                           disabled={changingRole === m.id}
                           onClick={() => {
-                            handleRoleChange(m.id, m.user_id, pendingRoles[m.id]);
-                            setPendingRoles((prev) => { const n = { ...prev }; delete n[m.id]; return n; });
+                            const newRole = pendingRoles[m.id];
+                            if (newRole === "owner") {
+                              setOwnerConfirm({ membershipId: m.id, userId: m.user_id, name: name as string });
+                            } else {
+                              handleRoleChange(m.id, m.user_id, newRole);
+                              setPendingRoles((prev) => { const n = { ...prev }; delete n[m.id]; return n; });
+                            }
                           }}
                         >
                           {changingRole === m.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <Save className="w-3 h-3" />}
@@ -603,6 +610,32 @@ function TeamTab() {
           </CardContent>
         </Card>
       )}
+
+      {/* Owner promotion confirmation */}
+      <AlertDialog open={!!ownerConfirm} onOpenChange={(open) => !open && setOwnerConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Promote to Owner?</AlertDialogTitle>
+            <AlertDialogDescription>
+              You are about to grant <strong>{ownerConfirm?.name}</strong> full Owner access. Owners have unrestricted administrative control including the ability to manage all team members, settings, and integrations. This action can only be reversed by another owner.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (ownerConfirm) {
+                  handleRoleChange(ownerConfirm.membershipId, ownerConfirm.userId, "owner");
+                  setPendingRoles((prev) => { const n = { ...prev }; delete n[ownerConfirm.membershipId]; return n; });
+                }
+                setOwnerConfirm(null);
+              }}
+            >
+              Confirm Promotion
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
