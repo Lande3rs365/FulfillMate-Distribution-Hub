@@ -14,7 +14,7 @@ import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 
-const navItems = [
+export const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Dashboard" },
   { to: "/exceptions", icon: AlertTriangle, label: "Exceptions" },
   { to: "/orders", icon: Package, label: "Orders" },
@@ -30,8 +30,8 @@ const navItems = [
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
-export default function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+/** Shared sidebar content used in both desktop sidebar and mobile drawer */
+export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: boolean; onNavigate?: () => void }) {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
@@ -44,7 +44,7 @@ export default function AppSidebar() {
 
   useEffect(() => {
     if (!user) return;
-    const fetch = async () => {
+    const fetchProfile = async () => {
       const { data } = await supabase
         .from("profiles")
         .select("display_name, job_title")
@@ -52,7 +52,7 @@ export default function AppSidebar() {
         .single();
       if (data) setProfileData(data);
     };
-    fetch();
+    fetchProfile();
   }, [user]);
 
   const displayName = profileData.display_name || user?.user_metadata?.full_name || user?.email || "User";
@@ -61,10 +61,8 @@ export default function AppSidebar() {
   const initials = displayName.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
-    <aside className={cn(
-      "h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-200",
-      collapsed ? "w-16" : "w-56"
-    )}>
+    <>
+      {/* Logo */}
       <div className="p-4 border-b border-sidebar-border flex items-center gap-3">
         <div className="w-8 h-8 rounded-md bg-primary flex items-center justify-center shrink-0">
           <Package className="w-4 h-4 text-primary-foreground" />
@@ -116,13 +114,15 @@ export default function AppSidebar() {
         </div>
       )}
 
-      <nav className="flex-1 py-3 px-2 space-y-0.5">
+      {/* Navigation */}
+      <nav className="flex-1 py-3 px-2 space-y-0.5 overflow-y-auto">
         {navItems.map(({ to, icon: Icon, label }) => {
           const isActive = location.pathname === to;
           return (
             <NavLink
               key={to}
               to={to}
+              onClick={onNavigate}
               className={cn(
                 "flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors",
                 isActive
@@ -161,7 +161,7 @@ export default function AppSidebar() {
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent side="right" align="end" className="w-48">
-              <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer">
+              <DropdownMenuItem onClick={() => { navigate("/profile"); onNavigate?.(); }} className="cursor-pointer">
                 <User className="w-3.5 h-3.5 mr-2" />
                 View Profile
               </DropdownMenuItem>
@@ -176,11 +176,24 @@ export default function AppSidebar() {
             </DropdownMenuContent>
           </DropdownMenu>
         )}
+      </div>
+    </>
+  );
+}
+
+export default function AppSidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+
+  return (
+    <aside className={cn(
+      "hidden md:flex h-screen bg-sidebar border-r border-sidebar-border flex-col transition-all duration-200",
+      collapsed ? "w-16" : "w-56"
+    )}>
+      <SidebarContent collapsed={collapsed} />
+      <div className="p-2 border-t border-sidebar-border">
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className={cn(
-            "w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent text-sm transition-colors"
-          )}
+          className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-md text-sidebar-foreground hover:bg-sidebar-accent text-sm transition-colors"
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}
         </button>
