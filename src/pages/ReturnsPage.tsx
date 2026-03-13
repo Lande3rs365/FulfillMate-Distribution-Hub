@@ -344,10 +344,10 @@ export default function ReturnsPage() {
   if (!currentCompany) return <EmptyState icon={RotateCcw} title="No company selected" />;
 
   return (
-    <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold">Returns</h1>
+          <h1 className="text-xl md:text-2xl font-bold">Returns</h1>
           <p className="text-sm text-muted-foreground">Manage returns, exchanges, and warranty claims</p>
         </div>
         <Button onClick={handleOpenNew} size="sm">

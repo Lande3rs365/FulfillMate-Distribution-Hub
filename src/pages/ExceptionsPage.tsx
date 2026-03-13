@@ -282,9 +282,9 @@ export default function ExceptionsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-end gap-4 flex-wrap">
-        <h1 className="text-2xl font-bold">Exception Queue</h1>
+        <h1 className="text-xl md:text-2xl font-bold">Exception Queue</h1>
         <Badge variant="outline" className="text-xs font-medium border-amber-500/40 text-amber-600">
           {sortedActive.onHold.length} On Hold
         </Badge>
