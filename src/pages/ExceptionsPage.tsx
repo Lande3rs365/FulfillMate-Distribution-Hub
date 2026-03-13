@@ -282,9 +282,9 @@ export default function ExceptionsPage() {
   };
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-6">
       <div className="flex items-end gap-4 flex-wrap">
-        <h1 className="text-2xl font-bold">Exception Queue</h1>
+        <h1 className="text-xl md:text-2xl font-bold">Exception Queue</h1>
         <Badge variant="outline" className="text-xs font-medium border-amber-500/40 text-amber-600">
           {sortedActive.onHold.length} On Hold
         </Badge>
@@ -322,10 +322,12 @@ export default function ExceptionsPage() {
                 <Phone className="w-3.5 h-3.5" /> On-Hold Orders — Follow Up Required ({sortedActive.onHold.length})
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>{renderSortableHeader(true, sortedActive.onHold.map(e => e.id))}</TableHeader>
                   <TableBody>{sortedActive.onHold.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
+                </div>
               </div>
             </div>
           )}
@@ -336,10 +338,12 @@ export default function ExceptionsPage() {
                 Other Exceptions ({sortedActive.other.length})
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>{renderSortableHeader(true, sortedActive.other.map(e => e.id))}</TableHeader>
                   <TableBody>{sortedActive.other.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
+                </div>
               </div>
             </div>
           )}
@@ -350,6 +354,7 @@ export default function ExceptionsPage() {
                 Resolved ({resolved.length})
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>{renderSortableHeader(false, [])}</TableHeader>
                   <TableBody>
@@ -394,6 +399,7 @@ export default function ExceptionsPage() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               </div>
             </div>
           )}

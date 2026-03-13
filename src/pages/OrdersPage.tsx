@@ -7,6 +7,7 @@ import { Package, Search, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import {
   Select,
   SelectContent,
@@ -27,6 +28,7 @@ export default function OrdersPage() {
   const navigate = useNavigate();
   const { currentCompany } = useCompany();
   const { data: orders = [], isLoading } = useOrders();
+  const isMobile = useIsMobile();
 
   const wooStatuses = useMemo(() => {
     const set = new Set(orders.map(o => o.woo_status).filter(Boolean));
@@ -41,7 +43,6 @@ export default function OrdersPage() {
   const filtered = useMemo(() => {
     let result = orders;
 
-    // Text search
     if (search) {
       const q = search.toLowerCase();
       result = result.filter(o =>
@@ -51,17 +52,14 @@ export default function OrdersPage() {
       );
     }
 
-    // Woo status filter
     if (wooFilter !== "all") {
       result = result.filter(o => o.woo_status === wooFilter);
     }
 
-    // Status filter
     if (statusFilter !== "all") {
       result = result.filter(o => o.status === statusFilter);
     }
 
-    // Sort
     result = [...result].sort((a, b) => {
       let cmp = 0;
       if (sortField === "order_date") {
@@ -98,17 +96,15 @@ export default function OrdersPage() {
   if (!currentCompany) return <EmptyState icon={Package} title="No company selected" description="Create or join a company to view orders." />;
 
   return (
-    <div className="p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold">Master Orders</h1>
-          <p className="text-sm text-muted-foreground">{orders.length} orders · Click any row for detail view</p>
-        </div>
+    <div className="p-4 md:p-6 space-y-4">
+      <div>
+        <h1 className="text-xl md:text-2xl font-bold">Master Orders</h1>
+        <p className="text-sm text-muted-foreground">{orders.length} orders · Click any row for detail view</p>
       </div>
 
       {/* Filters row */}
-      <div className="flex items-center gap-3 flex-wrap">
-        <div className="relative max-w-xs flex-1 min-w-[200px]">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
+        <div className="relative flex-1 min-w-0 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <input
             type="text"
@@ -119,47 +115,79 @@ export default function OrdersPage() {
           />
         </div>
 
-        <Select value={wooFilter} onValueChange={setWooFilter}>
-          <SelectTrigger className="w-[160px] bg-card">
-            <SelectValue placeholder="Woo Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Woo Status</SelectItem>
-            {wooStatuses.map(s => (
-              <SelectItem key={s} value={s!}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Select value={wooFilter} onValueChange={setWooFilter}>
+            <SelectTrigger className="w-[140px] sm:w-[160px] bg-card">
+              <SelectValue placeholder="Woo Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Woo Status</SelectItem>
+              {wooStatuses.map(s => (
+                <SelectItem key={s} value={s!}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[160px] bg-card">
-            <SelectValue placeholder="Status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Status</SelectItem>
-            {statuses.map(s => (
-              <SelectItem key={s} value={s}>{s}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <SelectTrigger className="w-[140px] sm:w-[160px] bg-card">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Status</SelectItem>
+              {statuses.map(s => (
+                <SelectItem key={s} value={s}>{s}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
-        {(wooFilter !== "all" || statusFilter !== "all" || search) && (
-          <button
-            onClick={() => { setWooFilter("all"); setStatusFilter("all"); setSearch(""); }}
-            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
-          >
-            Clear filters
-          </button>
-        )}
+          {(wooFilter !== "all" || statusFilter !== "all" || search) && (
+            <button
+              onClick={() => { setWooFilter("all"); setStatusFilter("all"); setSearch(""); }}
+              className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
 
-        <span className="ml-auto text-xs text-muted-foreground">
+        <span className="text-xs text-muted-foreground sm:ml-auto">
           Showing {filtered.length} of {orders.length}
         </span>
       </div>
 
       {isLoading ? <LoadingSpinner message="Loading orders..." /> : filtered.length === 0 ? (
         <EmptyState icon={Package} title="No orders found" description={search || wooFilter !== "all" || statusFilter !== "all" ? "Try adjusting your filters." : "Orders will appear here once data is imported."} />
+      ) : isMobile ? (
+        /* Mobile card view */
+        <div className="space-y-2">
+          {filtered.map(order => (
+            <div
+              key={order.id}
+              onClick={() => navigate(`/orders/${order.order_number}`)}
+              className="bg-card border border-border rounded-lg p-3 active:bg-muted/30 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="font-mono text-primary font-medium text-sm">{order.order_number}</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  {order.order_date ? new Date(order.order_date).toLocaleDateString() : '—'}
+                </span>
+              </div>
+              <p className="text-sm text-foreground truncate">{order.customer_name || '—'}</p>
+              {order.customer_email && (
+                <p className="text-xs text-muted-foreground truncate">{order.customer_email}</p>
+              )}
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                <StatusBadge status={order.woo_status || 'processing'} />
+                <StatusBadge status={order.status} />
+                {order.source && (
+                  <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{order.source}</span>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
+        /* Desktop table view */
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">

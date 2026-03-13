@@ -7,6 +7,7 @@ import { useCompany } from "@/contexts/CompanyContext";
 import { Truck, Search, AlertTriangle, CheckCircle, Clock, Package } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type StatusFilter = 'all' | 'in_transit' | 'delivered' | 'label_created' | 'exception';
 
@@ -16,6 +17,7 @@ export default function ShipmentsPage() {
   const { currentCompany } = useCompany();
   const { data: shipments = [], isLoading } = useShipments();
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
 
   const filtered = shipments
     .filter(s => {
@@ -41,9 +43,9 @@ export default function ShipmentsPage() {
   if (!currentCompany) return <EmptyState icon={Truck} title="No company selected" />;
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="p-4 md:p-6 space-y-4">
       <div>
-        <h1 className="text-2xl font-bold">Shipment Tracking</h1>
+        <h1 className="text-xl md:text-2xl font-bold">Shipment Tracking</h1>
         <p className="text-sm text-muted-foreground">{shipments.length} shipments · Carrier follow-up & delivery management</p>
       </div>
 
@@ -91,7 +93,33 @@ export default function ShipmentsPage() {
 
       {isLoading ? <LoadingSpinner message="Loading shipments..." /> : filtered.length === 0 ? (
         <EmptyState icon={Truck} title="No shipments" description="Shipments will appear here once orders are fulfilled." />
+      ) : isMobile ? (
+        /* Mobile card view */
+        <div className="space-y-2">
+          {filtered.map(s => (
+            <div
+              key={s.id}
+              onClick={() => s.orders?.order_number && navigate(`/orders/${s.orders.order_number}`)}
+              className="bg-card border border-border rounded-lg p-3 active:bg-muted/30 transition-colors cursor-pointer"
+            >
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-mono text-primary font-medium text-sm">{s.shipment_number || '—'}</span>
+                <StatusBadge status={s.status} />
+              </div>
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                <span>Order: <span className="text-info font-mono">{s.orders?.order_number || '—'}</span></span>
+                <span>{s.shipped_date ? new Date(s.shipped_date).toLocaleDateString() : '—'}</span>
+              </div>
+              <p className="text-sm text-foreground truncate">{s.orders?.customer_name || '—'}</p>
+              <div className="flex items-center justify-between mt-1.5 text-xs text-muted-foreground">
+                <span>{s.carrier || '—'}</span>
+                <span className="font-mono truncate max-w-[140px]">{s.tracking_number || 'No tracking'}</span>
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
+        /* Desktop table view */
         <div className="bg-card border border-border rounded-lg overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
