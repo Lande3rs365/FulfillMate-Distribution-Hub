@@ -79,7 +79,7 @@ export default function Dashboard() {
 
   if (!currentCompany) {
     return (
-      <div className="p-6">
+      <div className="p-4 md:p-6">
         <EmptyState icon={Package} title="No company set up" description="Create a company to start using DistroHub." />
       </div>
     );
