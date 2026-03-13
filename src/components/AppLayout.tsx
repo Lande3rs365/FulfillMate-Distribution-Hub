@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
 import PullToRefresh from "./PullToRefresh";
+import MobileBottomTabs from "./MobileBottomTabs";
 import { useQueryClient } from "@tanstack/react-query";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
@@ -59,6 +60,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         <PullToRefresh onRefresh={handleRefresh}>
           {children}
         </PullToRefresh>
+
+        {isMobile && <MobileBottomTabs />}
       </div>
 
       {tawkSettings?.is_enabled && tawkSettings?.property_id && (
