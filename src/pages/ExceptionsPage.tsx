@@ -322,10 +322,12 @@ export default function ExceptionsPage() {
                 <Phone className="w-3.5 h-3.5" /> On-Hold Orders — Follow Up Required ({sortedActive.onHold.length})
               </h3>
               <div className="rounded-lg border border-border overflow-hidden">
+                <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>{renderSortableHeader(true, sortedActive.onHold.map(e => e.id))}</TableHeader>
                   <TableBody>{sortedActive.onHold.map(exc => renderRow(exc, true))}</TableBody>
                 </Table>
+                </div>
               </div>
             </div>
           )}
