@@ -16,24 +16,33 @@ export type Database = {
     Tables: {
       companies: {
         Row: {
+          address: string | null
           code: string
           created_at: string
+          email: string | null
           id: string
           name: string
+          phone: string | null
           updated_at: string
         }
         Insert: {
+          address?: string | null
           code: string
           created_at?: string
+          email?: string | null
           id?: string
           name: string
+          phone?: string | null
           updated_at?: string
         }
         Update: {
+          address?: string | null
           code?: string
           created_at?: string
+          email?: string | null
           id?: string
           name?: string
+          phone?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -649,6 +658,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
           avatar_url: string | null
           created_at: string
           display_name: string | null
@@ -656,10 +666,12 @@ export type Database = {
           job_title: string | null
           onboarding_answers: Json | null
           onboarding_completed: boolean
+          phone: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
@@ -667,10 +679,12 @@ export type Database = {
           job_title?: string | null
           onboarding_answers?: Json | null
           onboarding_completed?: boolean
+          phone?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
+          address?: string | null
           avatar_url?: string | null
           created_at?: string
           display_name?: string | null
@@ -678,6 +692,7 @@ export type Database = {
           job_title?: string | null
           onboarding_answers?: Json | null
           onboarding_completed?: boolean
+          phone?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -986,31 +1001,40 @@ export type Database = {
       }
       stock_locations: {
         Row: {
+          address: string | null
           code: string
           company_id: string
           created_at: string
+          email: string | null
           id: string
           is_active: boolean
           location_type: string
           name: string
+          phone: string | null
         }
         Insert: {
+          address?: string | null
           code: string
           company_id: string
           created_at?: string
+          email?: string | null
           id?: string
           is_active?: boolean
           location_type?: string
           name: string
+          phone?: string | null
         }
         Update: {
+          address?: string | null
           code?: string
           company_id?: string
           created_at?: string
+          email?: string | null
           id?: string
           is_active?: boolean
           location_type?: string
           name?: string
+          phone?: string | null
         }
         Relationships: [
           {
