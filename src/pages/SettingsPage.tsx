@@ -514,7 +514,23 @@ function TeamTab() {
   };
 
 
-  const { data: invitations = [] } = useQuery<Invitation[]>({
+  const handleRemoveMember = async (membershipId: string) => {
+    if (!currentCompany) return;
+    try {
+      const { error } = await supabase
+        .from("user_companies")
+        .delete()
+        .eq("id", membershipId);
+      if (error) throw error;
+      toast({ title: "Member removed" });
+      queryClient.invalidateQueries({ queryKey: ["team_members", currentCompany.id] });
+    } catch (err: any) {
+      console.error("[settings:remove-member]", err);
+      toast({ title: "Error", description: "Failed to remove member.", variant: "destructive" });
+    }
+    setRemoveConfirm(null);
+  };
+
     queryKey: ["invitations", currentCompany?.id],
     queryFn: async () => {
       const { data, error } = await supabase
