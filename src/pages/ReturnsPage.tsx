@@ -154,6 +154,8 @@ export default function ReturnsPage() {
   const [reason, setReason] = useState<ReturnReason | null>(null);
   const [notes, setNotes] = useState('');
   const [duplicateWarning, setDuplicateWarning] = useState('');
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
 
   const { currentCompany } = useCompany();
   const { user } = useAuth();
