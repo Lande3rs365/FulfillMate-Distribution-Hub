@@ -398,8 +398,8 @@ function TeamTab() {
         <CardContent>
           <div className="space-y-2">
             {members.map((m) => {
-              const name = m.profile?.display_name || (isCurrentUser ? user?.email : "Team Member");
               const isCurrentUser = m.user_id === user?.id;
+              const name = m.profile?.display_name || (isCurrentUser ? user?.email : "Team Member");
               return (
                 <div
                   key={m.id}
