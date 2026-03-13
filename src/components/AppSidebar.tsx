@@ -70,15 +70,15 @@ export default function AppSidebar() {
         </div>
         {!collapsed &&
         <div className="overflow-hidden">
-            <h1 className="text-sm font-bold text-sidebar-accent-foreground truncate">Distribution Control Hub
+            <h1 className="text-sm font-bold text-sidebar-accent-foreground truncate">Powered by TH0.tech
+  
           </h1>
             <p className="text-[10px] text-sidebar-foreground">Operations Control</p>
           </div>}
       </div>
 
       {/* Company Switcher */}
-      {companies.length > 0 &&
-      <div className="px-2 py-2 border-b border-sidebar-border">
+      {companies.length > 0 && <div className="px-2 py-2 border-b border-sidebar-border">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <button className={cn(
