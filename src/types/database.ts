@@ -59,6 +59,10 @@ export interface Order {
   total_amount: number | null;
   currency: string;
   order_date: string | null;
+  tawk_ticket_id: string | null;
+  zendesk_ticket_id: string | null;
+  last_customer_contact_at: string | null;
+  customer_chase_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -85,6 +89,9 @@ export interface Shipment {
   delivered_date: string | null;
   weight_grams: number | null;
   shipping_cost: number | null;
+  region: string | null;
+  tracking_chase_sent_at: string | null;
+  tracking_chase_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -255,4 +262,101 @@ export interface StockMovementWithRelations extends StockMovement {
   products: Pick<Product, 'name'> | null;
   from_location: Pick<StockLocation, 'name' | 'code'> | null;
   to_location: Pick<StockLocation, 'name' | 'code'> | null;
+}
+
+// ============================================================
+// AI Agent Communications Infrastructure
+// ============================================================
+
+export type CommsChannel = 'email' | 'tawk' | 'zendesk' | 'whatsapp';
+export type CommsThreadStatus = 'open' | 'awaiting_reply' | 'resolved' | 'closed';
+export type CommsParticipantType = 'customer' | 'carrier' | 'supplier' | 'team';
+export type CommsDirection = 'inbound' | 'outbound';
+export type CommsSenderType = 'customer' | 'carrier' | 'supplier' | 'agent_ai' | 'team' | 'system';
+export type IncomingWebhookSource = 'shipping_email' | 'tawk' | 'zendesk' | 'carrier' | 'other';
+export type AgentActionType =
+  | 'tracking_chase'
+  | 'tracking_extract'
+  | 'customer_notify'
+  | 'customer_chase'
+  | 'ticket_match'
+  | 'whatsapp_cob_summary'
+  | 'whatsapp_urgent'
+  | 'record_update'
+  | 'exception_flag';
+export type AgentActionStatus = 'pending' | 'completed' | 'failed' | 'skipped';
+export type AgentTriggerSource = 'cron' | 'webhook' | 'manual';
+
+export interface CommsThread {
+  id: string;
+  company_id: string;
+  order_id: string | null;
+  shipment_id: string | null;
+  channel: CommsChannel;
+  external_thread_id: string | null;
+  subject: string | null;
+  participant_type: CommsParticipantType | null;
+  participant_name: string | null;
+  participant_contact: string | null;
+  status: CommsThreadStatus;
+  last_message_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CommsMessage {
+  id: string;
+  company_id: string;
+  thread_id: string;
+  direction: CommsDirection;
+  sender_type: CommsSenderType;
+  sender_name: string | null;
+  sender_contact: string | null;
+  body: string | null;
+  raw_payload: Record<string, unknown> | null;
+  extracted_data: Record<string, unknown> | null;
+  processed_at: string | null;
+  created_at: string;
+}
+
+export interface IncomingWebhook {
+  id: string;
+  company_id: string | null;
+  source: IncomingWebhookSource;
+  raw_payload: Record<string, unknown>;
+  processed: boolean;
+  processed_at: string | null;
+  matched_order_id: string | null;
+  matched_shipment_id: string | null;
+  matched_thread_id: string | null;
+  error_message: string | null;
+  created_at: string;
+}
+
+export interface AgentAction {
+  id: string;
+  company_id: string;
+  action_type: AgentActionType;
+  trigger_source: AgentTriggerSource;
+  linked_order_id: string | null;
+  linked_shipment_id: string | null;
+  linked_thread_id: string | null;
+  linked_webhook_id: string | null;
+  status: AgentActionStatus;
+  input_summary: string | null;
+  output_summary: string | null;
+  error_message: string | null;
+  executed_at: string | null;
+  created_at: string;
+}
+
+// Join types
+export interface CommsThreadWithMessages extends CommsThread {
+  comms_messages: CommsMessage[];
+}
+
+export interface AgentActionWithRelations extends AgentAction {
+  orders: Pick<Order, 'order_number' | 'customer_name'> | null;
+  shipments: Pick<Shipment, 'shipment_number' | 'tracking_number'> | null;
+  comms_threads: Pick<CommsThread, 'channel' | 'subject' | 'status'> | null;
 }
