@@ -529,7 +529,7 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
           <p className="text-xs text-muted-foreground">No uploads yet.</p>
         ) : (
           <div className="space-y-2">
-            {logs.map(u => (
+            {logs.slice(0, 5).map(u => (
               <div key={u.id} className="flex items-center justify-between p-3 rounded-md bg-muted/30 border border-border/50">
                 <div className="flex items-center gap-3">
                   <FileSpreadsheet className="w-4 h-4 text-success" />
