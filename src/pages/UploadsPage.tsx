@@ -227,7 +227,6 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
 
   if (!currentCompany) return <EmptyState icon={Upload} title="No company selected" />;
 
-  const sourceInfo = SOURCE_INFO[selectedSource];
 
   return (
     <div className={cn(embedded ? "space-y-6" : "p-6 space-y-6")}>
