@@ -872,20 +872,66 @@ function TeamTab() {
 
 // ─── AI Agent Coming Soon ───────────────────────────────────────────
 function AIAgentComingSoon() {
-  const features = [
-    { icon: MessageSquare, title: "Smart Inbox Monitoring", desc: "Reads and responds to shipping queries from Tawk.to & Zendesk automatically" },
-    { icon: Search, title: "Tracking Chase", desc: "Chases missing tracking numbers from distributors without manual follow-up" },
-    { icon: Bell, title: "Customer Updates", desc: "Keeps customers informed with proactive shipping status notifications" },
-    { icon: Clock, title: "EOD Team Briefings", desc: "Delivers end-of-day operational summaries straight to WhatsApp" },
-    { icon: Zap, title: "Order Matching", desc: "Matches incoming responses to the right orders and updates records instantly" },
+  const coreFeatures = [
+    { icon: MessageSquare, title: "Smart Inbox Monitoring", desc: "Monitors dedicated distribution and customer support email accounts, plus Tawk.to & Zendesk — reads, classifies, and routes every message automatically" },
+    { icon: Search, title: "Tracking Chase", desc: "Chases missing tracking numbers from distributors without manual follow-up — follows up until resolved" },
+    { icon: Bell, title: "Customer Updates", desc: "Keeps customers informed with proactive shipping status notifications across email and messaging" },
+    { icon: Clock, title: "EOD Team Briefings", desc: "Delivers end-of-day operational summaries straight to WhatsApp — orders shipped, exceptions raised, stock alerts" },
+    { icon: Zap, title: "Order Matching", desc: "Matches incoming responses to the right orders and updates records instantly — no manual intervention" },
     { icon: CheckCircle2, title: "Full Audit Trail", desc: "Every action logged, every message traceable — complete operational visibility" },
   ];
+
+  const PHASES = [
+    {
+      phase: "Phase 1",
+      label: "Intelligent Comms",
+      status: "Building Now",
+      items: [
+        { name: "Google Drive / Sheets", desc: "Agent watches folders, auto-imports new files via existing pipeline" },
+        { name: "Email Inbox Monitoring", desc: "Dedicated distribution & customer support email account monitoring" },
+        { name: "Tawk.to & Zendesk", desc: "Reads support responses, matches to orders, updates records" },
+      ],
+    },
+    {
+      phase: "Phase 2",
+      label: "Shipping & Accounting",
+      status: "Next Up",
+      items: [
+        { name: "EasyPost", desc: "Unified tracking for 100+ carriers — live webhooks replace manual chase" },
+        { name: "Xero / QuickBooks / MYOB", desc: "Sync invoices, payments, and reconcile orders automatically" },
+      ],
+    },
+    {
+      phase: "Phase 3",
+      label: "Sales Channels",
+      status: "Planned",
+      items: [
+        { name: "Shopify / Etsy", desc: "Orders flow in from additional e-commerce channels automatically" },
+        { name: "Klaviyo / Mailchimp", desc: "Trigger dispatch & delivery emails from order status changes" },
+      ],
+    },
+    {
+      phase: "Phase 4",
+      label: "Marketplace & Payments",
+      status: "Planned",
+      items: [
+        { name: "Amazon Seller", desc: "Marketplace orders via SP-API with automatic fulfilment sync" },
+        { name: "PayPal / Afterpay", desc: "Payment status reconciliation against orders" },
+        { name: "Slack / Telegram / Trello", desc: "Team alerts, exception cards, and channel summaries" },
+      ],
+    },
+  ];
+
+  const phaseColors: Record<string, string> = {
+    "Building Now": "bg-primary/15 text-primary border-primary/25",
+    "Next Up": "bg-accent/50 text-accent-foreground border-accent/30",
+    "Planned": "bg-muted text-muted-foreground border-border",
+  };
 
   return (
     <div className="space-y-8">
       {/* Hero */}
       <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-8 sm:p-12">
-        {/* Ambient glow */}
         <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
         <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
 
@@ -907,29 +953,70 @@ function AIAgentComingSoon() {
               Intelligent communications, automated.
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Your operations keep moving — even when you're not watching. From chasing tracking 
-              information from distributors to urgent stock alerts, the AI agent handles the 
-              repetitive comms so your team can focus on what matters.
+              FulfillMate's built-in AI agent monitors your shipping inbox, chases missing tracking numbers, 
+              keeps customers informed, and delivers end-of-day team briefings to WhatsApp — automatically.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              It reads responses from Tawk.to and Zendesk, matches them to the right orders, and updates 
+              your records without manual intervention. Every action is logged; every message is traceable.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Feature grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {features.map((f) => (
-          <Card key={f.title} className="bg-card/50 border-border/50 hover:border-primary/20 transition-colors group">
-            <CardHeader className="pb-2">
-              <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/15 transition-colors">
-                <f.icon className="w-4.5 h-4.5 text-primary" />
-              </div>
-              <CardTitle className="text-sm font-semibold">{f.title}</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
-            </CardContent>
-          </Card>
-        ))}
+      {/* Core feature grid */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">Core Capabilities</h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {coreFeatures.map((f) => (
+            <Card key={f.title} className="bg-card/50 border-border/50 hover:border-primary/20 transition-colors group">
+              <CardHeader className="pb-2">
+                <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/15 transition-colors">
+                  <f.icon className="w-4.5 h-4.5 text-primary" />
+                </div>
+                <CardTitle className="text-sm font-semibold">{f.title}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+
+      {/* Roadmap phases */}
+      <div>
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wider mb-4">Integration Roadmap</h3>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {PHASES.map((phase) => (
+            <Card key={phase.phase} className="bg-card border-border/60">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{phase.phase}</p>
+                    <CardTitle className="text-sm font-semibold mt-0.5">{phase.label}</CardTitle>
+                  </div>
+                  <Badge variant="outline" className={cn("text-[10px] font-semibold", phaseColors[phase.status])}>
+                    {phase.status}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <div className="space-y-2.5">
+                  {phase.items.map((item) => (
+                    <div key={item.name} className="flex gap-2.5">
+                      <div className="w-1 rounded-full bg-primary/20 shrink-0 mt-1" style={{ minHeight: 24 }} />
+                      <div>
+                        <p className="text-xs font-medium text-foreground">{item.name}</p>
+                        <p className="text-[11px] text-muted-foreground leading-relaxed">{item.desc}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
 
       {/* Bottom CTA */}
