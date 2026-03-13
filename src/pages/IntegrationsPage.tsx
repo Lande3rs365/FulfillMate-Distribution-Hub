@@ -36,7 +36,7 @@ export default function IntegrationsPage() {
   return <IntegrationsContent />;
 }
 
-export function IntegrationsContent() {
+export function IntegrationsContent({ embedded = false }: { embedded?: boolean }) {
   const { currentCompany } = useCompany();
   const { user } = useAuth();
   const queryClient = useQueryClient();
