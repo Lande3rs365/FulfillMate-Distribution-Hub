@@ -121,3 +121,7 @@
     box-shadow: 0 0 20px hsl(38 92% 50% / 0.1);
   }
 }
+
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
