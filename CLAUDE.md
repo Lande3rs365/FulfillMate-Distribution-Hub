@@ -1,4 +1,4 @@
-# CLAUDE.md — Shipment Tally Hub
+# CLAUDE.md — FulfillMate Distribution Hub
 
 AI assistant guide for understanding and working in this codebase.
 
@@ -6,7 +6,7 @@ AI assistant guide for understanding and working in this codebase.
 
 ## Project Overview
 
-**Shipment Tally Hub** is a multi-tenant inventory and shipment management web application. It enables businesses to:
+**FulfillMate Distribution Hub** is a multi-tenant inventory and shipment management web application. It enables businesses to:
 
 - Manage customer orders (WooCommerce integration)
 - Track outbound shipments (Pirate Ship / ShipStation)
@@ -15,6 +15,7 @@ AI assistant guide for understanding and working in this codebase.
 - Process product returns
 - Handle operational exceptions and on-hold orders
 - Import data via CSV/XLSX files with auto-detection
+- Manage product/SKU catalogs including billiard cue hierarchies (parent/variant)
 
 **Architecture:** Client-side React app backed by Supabase (PostgreSQL + Auth). No dedicated backend server — all data access is via Supabase PostgREST APIs with Row Level Security (RLS).
 
@@ -50,10 +51,12 @@ src/
 │   ├── ui/                    # shadcn/ui components (40+ files, DO NOT hand-edit)
 │   ├── AppLayout.tsx          # Main app shell with sidebar
 │   ├── AppSidebar.tsx         # Navigation sidebar + company switcher
+│   ├── ErrorBoundary.tsx      # Class component catching React errors; shows reload UI
 │   ├── ProtectedRoute.tsx     # Auth guard (redirects to /login if no session)
 │   ├── CompanyGate.tsx        # Redirects to /onboarding if no company
 │   ├── InviteMemberDialog.tsx # Invite team members dialog
 │   ├── KpiCard.tsx            # Dashboard KPI stat card
+│   ├── NavLink.tsx            # Wrapper around React Router NavLink with active/pending class support
 │   ├── StatusBadge.tsx        # Colored status pill
 │   ├── EmptyState.tsx         # Zero-data placeholder
 │   └── LoadingSpinner.tsx
@@ -68,18 +71,20 @@ src/
 │   ├── ReturnsPage.tsx
 │   ├── ExceptionsPage.tsx
 │   ├── AdjustmentsPage.tsx
+│   ├── ProductsPage.tsx       # SKU catalog management (filtering, display)
 │   ├── UploadsPage.tsx        # CSV/XLSX data intake
 │   ├── ExportsPage.tsx
 │   ├── LoginPage.tsx
 │   ├── SignupPage.tsx
 │   ├── OnboardingPage.tsx     # First-time company creation
 │   ├── AcceptInvitePage.tsx
+│   ├── Index.tsx              # Unused fallback redirect page
 │   └── NotFound.tsx
 ├── contexts/
 │   ├── AuthContext.tsx         # Supabase session + signOut
 │   └── CompanyContext.tsx      # Multi-tenant: companies[], currentCompany
 ├── hooks/
-│   ├── useSupabaseData.ts      # 19+ React Query hooks for all data fetching
+│   ├── useSupabaseData.ts      # 15+ React Query hooks for all data fetching
 │   ├── use-toast.ts
 │   └── use-mobile.tsx
 ├── integrations/
@@ -91,19 +96,30 @@ src/
 ├── lib/
 │   ├── utils.ts                # cn() Tailwind class utility
 │   ├── csvParsers.ts           # WooCommerce, Pirate Ship, XLSX parsers
-│   └── importHelpers.ts        # Import execution + preview functions
+│   ├── importHelpers.ts        # Import execution + preview functions
+│   └── skuFrameworkParser.ts   # XLSX parser for billiard cue SKU framework (parent/variant hierarchy)
 ├── types/
 │   └── database.ts             # Hand-written TypeScript types for DB entities
 ├── data/
 │   └── mockData.ts             # Static mock data structures
 ├── test/
+│   ├── components/
+│   │   └── uiComponents.test.tsx
+│   ├── integration/
+│   │   ├── auth.test.tsx
+│   │   └── hooks.test.tsx
+│   ├── unit/
+│   │   └── skuFrameworkParser.test.ts
 │   ├── setup.ts                # Vitest setup (jest-dom + matchMedia mock)
-│   └── example.test.ts
+│   ├── example.test.ts
+│   ├── csvParsers.test.ts
+│   ├── importHelpers.test.ts
+│   └── utils.test.ts
 ├── App.tsx                     # Router, providers, route definitions
 ├── main.tsx                    # React root
 └── index.css                   # Global styles + Tailwind directives
 supabase/
-├── migrations/                 # 14 SQL migration files (timestamped)
+├── migrations/                 # 22 SQL migration files (timestamped)
 └── config.toml                 # Supabase project config
 ```
 
@@ -113,16 +129,17 @@ supabase/
 
 | File | Purpose |
 |---|---|
-| `src/App.tsx` | All route definitions; wraps app in providers |
+| `src/App.tsx` | All route definitions; wraps app in providers (outermost: ErrorBoundary) |
 | `src/contexts/AuthContext.tsx` | `useAuth()` — session, user, signOut |
 | `src/contexts/CompanyContext.tsx` | `useCompany()` — companies, currentCompany, setCurrentCompany |
 | `src/hooks/useSupabaseData.ts` | All data-fetching hooks (React Query) |
 | `src/lib/csvParsers.ts` | CSV/XLSX parsing logic per source type |
 | `src/lib/importHelpers.ts` | Batch import/update logic for orders and shipments |
+| `src/lib/skuFrameworkParser.ts` | XLSX parser for billiard cue SKU hierarchy (v12 format) |
 | `src/integrations/supabase/client.ts` | Supabase client instance (import from here) |
 | `src/integrations/supabase/types.ts` | Auto-generated DB types (do not edit) |
 | `src/types/database.ts` | Hand-written entity types and join types |
-| `supabase/migrations/` | SQL schema history |
+| `supabase/migrations/` | SQL schema history (22 files) |
 
 ---
 
@@ -180,7 +197,21 @@ const { data } = useQuery({
 1. `AuthContext` wraps the app and listens to `supabase.auth.onAuthStateChange`
 2. `ProtectedRoute` redirects to `/login` if no session
 3. `CompanyGate` redirects to `/onboarding` if user has no companies
-4. After onboarding, `CompanyContext` persists selected company to `localStorage` (`distrohub_company_id`)
+4. After onboarding, `CompanyContext` persists selected company to `localStorage` (`fulfillmate_company_id`)
+
+### Provider Hierarchy (App.tsx)
+
+From outermost to innermost:
+```
+ErrorBoundary
+  QueryClientProvider
+    TooltipProvider
+      Toaster (Radix) + Toaster (Sonner)
+        BrowserRouter
+          AuthProvider
+            CompanyProvider
+              Routes
+```
 
 ### Data Fetching
 
@@ -193,7 +224,28 @@ import { useOrders } from '@/hooks/useSupabaseData';
 const { data: orders, isLoading, error } = useOrders();
 ```
 
-Available hooks: `useOrders`, `useShipments`, `useInventory`, `useReturns`, `useExceptions`, `useProducts`, `useStockMovements`, `useManufacturerManifests`, `useDashboardStats`, and more.
+**Available query hooks:**
+- `useOrders()` — Paginated orders with items
+- `useOrder(orderId)` — Single order by order_number
+- `useOrderEvents(orderId)` — Event log for a specific order
+- `useOrderShipments(orderId)` — Shipments for a specific order
+- `useInventory()` — All inventory with product and location relations
+- `useStockMovements()` — Stock movement history
+- `useStockMovementsByProduct(productId)` — Last 10 movements for a product
+- `useShipments()` — All shipments with order details
+- `useReturns()` — All returns with linked order numbers
+- `useManufacturerManifests()` — Inbound manifests with items
+- `useExceptions()` — Open exceptions with linked order info
+- `useProducts()` — Active products ordered by SKU
+- `useStockLocations()` — Active warehouse locations
+- `useDataIntakeLogs()` — CSV/XLSX import history
+- `useDashboardStats()` — Comprehensive dashboard aggregates
+
+**Available mutation hooks:**
+- `useImportSkuFramework()` — Bulk import billiard cue SKU framework XLSX with parent/variant hierarchy resolution
+
+**Factory:**
+- `useCompanyQuery<T>()` — Generic company-scoped query factory
 
 ### CSV/XLSX Import Pipeline
 
@@ -204,6 +256,16 @@ Available hooks: `useOrders`, `useShipments`, `useInventory`, `useReturns`, `use
    - Master XLSX: Combined orders + shipments in a single Excel file
 3. `importHelpers.ts` previews changes (new vs. updated record counts)
 4. On confirmation, bulk upserts are executed via Supabase
+
+### SKU Framework Import Pipeline (`skuFrameworkParser.ts`)
+
+Handles billiard cue product hierarchies from proprietary XLSX files:
+
+- Auto-detects header rows
+- Supports multiple product categories: shafts, playing cues, break cues, jump cues, cases, accessories, apparel
+- Resolves parent/variant product relationships from SKU prefixes
+- Supports v12 product format with `model`/`variant` row types
+- Invoked via `useImportSkuFramework()` mutation hook
 
 ### State Management Pattern
 
@@ -345,6 +407,12 @@ Tests use **Vitest** with **Testing Library**.
 - Setup: `src/test/setup.ts` (includes `@testing-library/jest-dom` matchers and `window.matchMedia` mock)
 - Use `describe` / `it` / `expect` globally (configured in `vitest.config.ts`)
 
+**Test organization:**
+- `src/test/unit/` — Pure unit tests (e.g., `skuFrameworkParser.test.ts`)
+- `src/test/integration/` — Integration tests for hooks and auth (e.g., `hooks.test.tsx`, `auth.test.tsx`)
+- `src/test/components/` — Component rendering tests (e.g., `uiComponents.test.tsx`)
+- `src/test/` (root) — General tests (`csvParsers.test.ts`, `importHelpers.test.ts`, `utils.test.ts`)
+
 ```typescript
 import { render, screen } from '@testing-library/react';
 import { MyComponent } from '@/components/MyComponent';
@@ -390,6 +458,37 @@ Use the `InviteMemberDialog` component or call `supabase.from('invitations').ins
 
 ---
 
+## Known Security Items
+
+### Leaked Password Protection (requires Supabase Dashboard — not fixable via SQL)
+
+Supabase's security advisor flags that **Leaked Password Protection** is disabled. This feature
+checks new passwords against the HaveIBeenPwned database and rejects compromised ones.
+
+**To enable:**
+1. Open the Supabase Dashboard for this project
+2. Go to **Authentication → Security**
+3. Toggle on **"Check passwords against HaveIBeenPwned"**
+
+This cannot be configured via SQL migrations — it is a platform-level Auth setting.
+
+### companies INSERT policy (resolved in migration `20260309120559`)
+
+Supabase's security advisor previously flagged the `companies` INSERT policy as "always true"
+(`WITH CHECK (true)`). This policy has been **dropped** — it was unnecessary because:
+
+- Company creation goes exclusively through the `create_company_with_owner()` RPC function
+  (`OnboardingPage.tsx` line 83)
+- That function is `SECURITY DEFINER`, so it **bypasses RLS entirely** — no INSERT policy is
+  needed or evaluated
+- No client code path does a direct `INSERT INTO companies`
+
+**Do not re-add an INSERT policy on `companies`** unless a new client-side direct-insert flow
+is introduced, in which case `WITH CHECK (auth.uid() IS NOT NULL)` is the minimum; `WITH CHECK (true)`
+must be avoided.
+
+---
+
 ## DO NOT
 
 - Edit `src/integrations/supabase/types.ts` manually — it is auto-generated
@@ -405,7 +504,7 @@ Use the `InviteMemberDialog` component or call `supabase.from('invitations').ins
 
 ## Git Workflow
 
-- Active development branch: `claude/claude-md-mmh9cy9tm9pda3y3-t6FWw`
+- Active development branch: `claude/claude-md-mmifm76zvvhk9ffu-Ia6cW`
 - Main branch: `master`
 - Commit style: short, descriptive imperative messages (e.g., `Fix shipment status mapping`)
 - Push: `git push -u origin <branch-name>`
