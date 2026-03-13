@@ -933,13 +933,13 @@ function AIAgentComingSoon() {
   ];
 
   const phaseColors: Record<string, string> = {
-    "Building Now": "bg-primary/15 text-primary border-primary/25",
+    "In Development": "bg-primary/15 text-primary border-primary/25",
     "Next Up": "bg-accent/50 text-accent-foreground border-accent/30",
     "Planned": "bg-muted text-muted-foreground border-border",
   };
 
   const phaseEmoji: Record<string, string> = {
-    "Building Now": "🔥",
+    "In Development": "🔥",
     "Next Up": "⚡",
     "Planned": "🗺️",
   };
