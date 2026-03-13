@@ -397,7 +397,11 @@ export default function IntegrationsPage() {
               <Button onClick={() => saveWooCredentials(false)} disabled={wooSaving || wooSyncing} size="sm">
                 {wooSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null} Save Credentials
               </Button>
+              <Button onClick={handleWooSync} disabled={!hasWoo || wooSyncing || wooTesting} variant="outline" size="sm">
+                {wooSyncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />} Sync Now
+              </Button>
             </div>
+            {wooProgress && <p className="text-sm text-muted-foreground animate-pulse">{wooProgress}</p>}
           </div>
 
           {hasWoo && (
