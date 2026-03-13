@@ -7,6 +7,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import StatusBadge from "@/components/StatusBadge";
 import EmptyState from "@/components/EmptyState";
 import { Card, CardContent } from "@/components/ui/card";
+import KpiCard from "@/components/KpiCard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
@@ -15,6 +16,7 @@ import {
   ArrowLeftRight, ShieldCheck, PackageX, PackageSearch, AlertTriangle, HelpCircle, Plus,
   Truck, Globe,
 } from "lucide-react";
+import { useMemo } from "react";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
@@ -343,16 +345,31 @@ export default function ReturnsPage() {
 
   if (!currentCompany) return <EmptyState icon={RotateCcw} title="No company selected" />;
 
+  const returnCounts = useMemo(() => ({
+    initiated: returns.filter(r => r.status === 'initiated').length,
+    received: returns.filter(r => r.status === 'received' || r.status === 'approved').length,
+    resolved: returns.filter(r => r.status === 'resolved').length,
+    refunded: returns.filter(r => r.stock_outcome === 'refund' || r.resolution === 'refund').length,
+  }), [returns]);
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div>
           <h1 className="text-xl md:text-2xl font-bold">Returns</h1>
-          <p className="text-sm text-muted-foreground">Manage returns, exchanges, and warranty claims</p>
+          <p className="text-sm text-muted-foreground">{returns.length} returns · Manage returns, exchanges, and warranty claims</p>
         </div>
         <Button onClick={handleOpenNew} size="sm">
           <Plus className="w-4 h-4 mr-1" /> New Return
         </Button>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard title="Awaiting Action" value={returnCounts.initiated} icon={AlertTriangle} variant="warning" />
+        <KpiCard title="In Progress" value={returnCounts.received} icon={ArrowLeftRight} variant="info" />
+        <KpiCard title="Resolved" value={returnCounts.resolved} icon={CheckCircle2} variant="success" />
+        <KpiCard title="Refunded" value={returnCounts.refunded} icon={RotateCcw} variant="danger" />
       </div>
 
       <ReturnsTable returns={returns} isLoading={isLoading} />

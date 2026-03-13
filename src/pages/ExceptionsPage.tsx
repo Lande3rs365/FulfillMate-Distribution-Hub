@@ -2,10 +2,11 @@ import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import EmptyState from "@/components/EmptyState";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import KpiCard from "@/components/KpiCard";
 import { useExceptions } from "@/hooks/useSupabaseData";
 import { useCompany } from "@/contexts/CompanyContext";
 import { supabase } from "@/integrations/supabase/client";
-import { AlertTriangle, CheckCircle, Phone, ArrowUp, ArrowDown, ArrowUpDown, X } from "lucide-react";
+import { AlertTriangle, CheckCircle, Phone, ArrowUp, ArrowDown, ArrowUpDown, X, Clock, ShieldAlert } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -281,13 +282,25 @@ export default function ExceptionsPage() {
     );
   };
 
+  const reasonCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    active.forEach(e => { const r = e.reason || 'unassigned'; counts[r] = (counts[r] || 0) + 1; });
+    return counts;
+  }, [active]);
+
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div className="flex items-end gap-4 flex-wrap">
+      <div>
         <h1 className="text-xl md:text-2xl font-bold">Exception Queue</h1>
-        <Badge variant="outline" className="text-xs font-medium border-amber-500/40 text-amber-600">
-          {sortedActive.onHold.length} On Hold
-        </Badge>
+        <p className="text-sm text-muted-foreground">{exceptions.length} total · Triage & resolve operational issues</p>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard title="On Hold" value={sortedActive.onHold.length} icon={Phone} variant="warning" />
+        <KpiCard title="Active" value={sortedActive.other.length} icon={ShieldAlert} variant="danger" />
+        <KpiCard title="Unassigned Reason" value={reasonCounts['unassigned'] || 0} icon={Clock} variant="info" />
+        <KpiCard title="Resolved" value={resolved.length} icon={CheckCircle} variant="success" />
       </div>
 
       {/* Bulk action bar */}

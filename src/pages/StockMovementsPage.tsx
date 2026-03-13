@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import KpiCard from "@/components/KpiCard";
 import {
   ArrowDownLeft, ArrowUpRight, RefreshCw, SlidersHorizontal,
   Search, ArrowRightLeft, Plus, PackagePlus, PackageMinus
@@ -106,6 +107,14 @@ export default function StockMovementsPage() {
         <Button onClick={() => setShowAdjForm(!showAdjForm)} size="sm">
           <Plus className="w-4 h-4" /> New Adjustment
         </Button>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard title="Stock In" value={counts.IN} icon={ArrowDownLeft} variant="success" />
+        <KpiCard title="Stock Out" value={counts.OUT} icon={ArrowUpRight} variant="danger" />
+        <KpiCard title="Transfers" value={counts.MOVE} icon={RefreshCw} variant="info" />
+        <KpiCard title="Adjustments" value={counts.ADJUST} icon={SlidersHorizontal} variant="warning" />
       </div>
 
       {/* Adjustment Form */}

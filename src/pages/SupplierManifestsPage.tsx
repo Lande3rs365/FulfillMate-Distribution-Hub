@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import KpiCard from "@/components/KpiCard";
 import {
   Ship, Search, Package, AlertTriangle, Clock, CheckCircle,
   Plus, X, Truck, Calendar
@@ -214,6 +215,14 @@ export default function SupplierManifestsPage() {
         <Button onClick={() => setShowNewForm(!showNewForm)} size="sm">
           <Plus className="w-4 h-4" /> New Manifest
         </Button>
+      </div>
+
+      {/* KPI row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <KpiCard title="Pending" value={totalExpected} icon={Clock} variant="warning" />
+        <KpiCard title="Partially Received" value={totalIssues} icon={AlertTriangle} variant="danger" />
+        <KpiCard title="Received / Closed" value={totalReceived} icon={CheckCircle} variant="success" />
+        <KpiCard title="Total Manifests" value={manifests.length} icon={Ship} variant="info" />
       </div>
 
       {/* New Manifest Form */}
