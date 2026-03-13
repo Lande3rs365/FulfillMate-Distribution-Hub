@@ -365,9 +365,7 @@ export function IntegrationsContent({ embedded = false }: { embedded?: boolean }
         <CardHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
-                <Plug className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              </div>
+              <img src={wooLogo} alt="WooCommerce" className="w-10 h-10 rounded-lg" />
               <div>
                 <CardTitle className="text-lg">WooCommerce</CardTitle>
                 <CardDescription>Import orders directly from your WooCommerce store</CardDescription>
