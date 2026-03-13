@@ -284,16 +284,6 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
         })}
       </div>
 
-      {/* Destination info note */}
-      {sourceInfo && (
-        <div className="flex items-start gap-2 p-3 rounded-md bg-muted/30 border border-border/50 text-xs text-muted-foreground">
-          <Info className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>
-            <strong className="text-foreground">{sourceInfo.label}</strong> files write to the <strong className="text-foreground font-mono">{sourceInfo.destinationTable}</strong> table and appear on the <strong className="text-foreground">{sourceInfo.destinationPage}</strong> page.
-          </span>
-        </div>
-      )}
-
       {/* Source mismatch warning */}
       {pending?.mismatch && !pending.overridden && (
         <div className="border border-warning rounded-lg p-4 bg-warning/5 space-y-3">
