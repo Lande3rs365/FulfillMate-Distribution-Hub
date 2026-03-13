@@ -1,4 +1,4 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useCallback } from "react";
 import { Menu, Package } from "lucide-react";
 import AppSidebar, { SidebarContent } from "./AppSidebar";
 import TawkWidget from "./TawkWidget";
@@ -6,6 +6,8 @@ import { useTawkSettings } from "@/hooks/useSupabaseData";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { VisuallyHidden } from "@radix-ui/react-visually-hidden";
+import PullToRefresh from "./PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   const { data: tawkSettings } = useTawkSettings();
