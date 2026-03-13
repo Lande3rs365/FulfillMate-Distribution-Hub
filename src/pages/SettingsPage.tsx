@@ -18,6 +18,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import {
   Building2, MapPin, Users, Save, Loader2, Plus, Trash2, Copy,
   Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug, Shield, User,
+  Bot, Sparkles, MessageSquare, Bell, Search, Zap, Clock, CheckCircle2,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
@@ -869,6 +870,87 @@ function TeamTab() {
   );
 }
 
+// ─── AI Agent Coming Soon ───────────────────────────────────────────
+function AIAgentComingSoon() {
+  const features = [
+    { icon: MessageSquare, title: "Smart Inbox Monitoring", desc: "Reads and responds to shipping queries from Tawk.to & Zendesk automatically" },
+    { icon: Search, title: "Tracking Chase", desc: "Chases missing tracking numbers from distributors without manual follow-up" },
+    { icon: Bell, title: "Customer Updates", desc: "Keeps customers informed with proactive shipping status notifications" },
+    { icon: Clock, title: "EOD Team Briefings", desc: "Delivers end-of-day operational summaries straight to WhatsApp" },
+    { icon: Zap, title: "Order Matching", desc: "Matches incoming responses to the right orders and updates records instantly" },
+    { icon: CheckCircle2, title: "Full Audit Trail", desc: "Every action logged, every message traceable — complete operational visibility" },
+  ];
+
+  return (
+    <div className="space-y-8">
+      {/* Hero */}
+      <div className="relative overflow-hidden rounded-xl border border-primary/20 bg-gradient-to-br from-primary/5 via-card to-card p-8 sm:p-12">
+        {/* Ambient glow */}
+        <div className="absolute -top-24 -right-24 w-64 h-64 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-48 h-48 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
+
+        <div className="relative z-10 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-lg bg-primary/15 border border-primary/25 flex items-center justify-center">
+              <Bot className="w-6 h-6 text-primary" />
+            </div>
+            <Badge className="bg-primary/15 text-primary border-primary/25 hover:bg-primary/20 gap-1.5 text-xs font-semibold tracking-wide uppercase">
+              <Sparkles className="w-3 h-3" /> Coming Soon
+            </Badge>
+          </div>
+
+          <div className="space-y-3 max-w-2xl">
+            <h2 className="text-2xl sm:text-3xl font-bold text-foreground tracking-tight">
+              FulfillMate AI Agent
+            </h2>
+            <p className="text-lg text-primary font-medium">
+              Intelligent communications, automated.
+            </p>
+            <p className="text-sm text-muted-foreground leading-relaxed">
+              Your operations keep moving — even when you're not watching. From chasing tracking 
+              information from distributors to urgent stock alerts, the AI agent handles the 
+              repetitive comms so your team can focus on what matters.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Feature grid */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {features.map((f) => (
+          <Card key={f.title} className="bg-card/50 border-border/50 hover:border-primary/20 transition-colors group">
+            <CardHeader className="pb-2">
+              <div className="w-9 h-9 rounded-md bg-primary/10 flex items-center justify-center mb-2 group-hover:bg-primary/15 transition-colors">
+                <f.icon className="w-4.5 h-4.5 text-primary" />
+              </div>
+              <CardTitle className="text-sm font-semibold">{f.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-xs text-muted-foreground leading-relaxed">{f.desc}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Bottom CTA */}
+      <Card className="border-dashed border-primary/20 bg-primary/[0.03]">
+        <CardContent className="flex flex-col sm:flex-row items-center gap-4 p-6">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1 text-center sm:text-left">
+            <p className="text-sm font-medium text-foreground">Want early access?</p>
+            <p className="text-xs text-muted-foreground">We'll notify you as soon as the AI Agent is ready for your account.</p>
+          </div>
+          <Button size="sm" className="shrink-0 gap-1.5">
+            <Bell className="w-3.5 h-3.5" /> Notify Me
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 // ─── Settings Page ──────────────────────────────────────────────────
 export default function SettingsPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -902,6 +984,13 @@ export default function SettingsPage() {
           <TabsTrigger value="exports" className="gap-1.5">
             <FileText className="w-3.5 h-3.5" /> Exports
           </TabsTrigger>
+          <TabsTrigger value="ai-agent" className="gap-1.5 relative">
+            <Bot className="w-3.5 h-3.5" /> AI Agent
+            <span className="absolute -top-1 -right-1 flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
+            </span>
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="company">
@@ -921,6 +1010,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="exports">
           <ExportsContent embedded />
+        </TabsContent>
+        <TabsContent value="ai-agent">
+          <AIAgentComingSoon />
         </TabsContent>
       </Tabs>
     </div>
