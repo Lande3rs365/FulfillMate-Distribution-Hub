@@ -1,4 +1,7 @@
-import { Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Eye, AlertTriangle, Info } from "lucide-react";
+import {
+  Upload, FileSpreadsheet, Check, AlertCircle, Loader2, Eye, AlertTriangle, Info,
+  ShoppingCart, Ship, Anchor, FileDown, Package, Truck, Clock,
+} from "lucide-react";
 import { useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { useCompany } from "@/contexts/CompanyContext";
