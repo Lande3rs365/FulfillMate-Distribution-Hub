@@ -254,6 +254,7 @@ interface Invitation {
 const ROLES = [
   { value: "member", label: "Member" },
   { value: "admin", label: "Admin" },
+  { value: "owner", label: "Owner" },
 ];
 
 const FREE_MEMBER_LIMIT = 3;
@@ -268,6 +269,7 @@ function TeamTab() {
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("member");
   const [sending, setSending] = useState(false);
+  const [changingRole, setChangingRole] = useState<string | null>(null);
 
   // Fetch members
   const { data: members = [] } = useQuery<TeamMember[]>({
@@ -300,7 +302,30 @@ function TeamTab() {
     enabled: !!currentCompany?.id,
   });
 
-  // Fetch invitations
+  // Determine if current user is owner
+  const currentUserMembership = members.find((m) => m.user_id === user?.id);
+  const isOwner = currentUserMembership?.role === "owner";
+
+  const handleRoleChange = async (membershipId: string, memberId: string, newRole: string) => {
+    if (!currentCompany || memberId === user?.id) return;
+    setChangingRole(membershipId);
+    try {
+      const { error } = await supabase
+        .from("user_companies")
+        .update({ role: newRole })
+        .eq("id", membershipId);
+      if (error) throw error;
+      toast({ title: "Role updated", description: `Member role changed to ${newRole}.` });
+      queryClient.invalidateQueries({ queryKey: ["team_members", currentCompany.id] });
+    } catch (err: any) {
+      console.error("[settings:role-change]", err);
+      toast({ title: "Error", description: "Failed to update role. Only owners can change roles.", variant: "destructive" });
+    } finally {
+      setChangingRole(null);
+    }
+  };
+
+
   const { data: invitations = [] } = useQuery<Invitation[]>({
     queryKey: ["invitations", currentCompany?.id],
     queryFn: async () => {
@@ -419,12 +444,35 @@ function TeamTab() {
                       {name} {isCurrentUser && <span className="text-muted-foreground">(you)</span>}
                     </p>
                   </div>
-                  <Badge
-                    variant={m.role === "owner" ? "default" : "secondary"}
-                    className="text-[10px] capitalize"
-                  >
-                    {m.role}
-                  </Badge>
+                  {isOwner && !isCurrentUser ? (
+                    <Select
+                      value={m.role}
+                      onValueChange={(val) => handleRoleChange(m.id, m.user_id, val)}
+                      disabled={changingRole === m.id}
+                    >
+                      <SelectTrigger className="w-28 h-8 text-[11px]">
+                        {changingRole === m.id ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : (
+                          <SelectValue />
+                        )}
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ROLES.map((r) => (
+                          <SelectItem key={r.value} value={r.value} className="text-xs">
+                            {r.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Badge
+                      variant={m.role === "owner" ? "default" : "secondary"}
+                      className="text-[10px] capitalize"
+                    >
+                      {m.role}
+                    </Badge>
+                  )}
                 </div>
               );
             })}
