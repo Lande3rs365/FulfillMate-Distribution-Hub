@@ -24,9 +24,6 @@ export const navItems = [
   { to: "/products", icon: Tag, label: "Products" },
   { to: "/inventory", icon: Warehouse, label: "Inventory" },
   { to: "/stock-movements", icon: ArrowRightLeft, label: "Stock Ledger" },
-  { to: "/uploads", icon: Upload, label: "Data Intake" },
-  { to: "/exports", icon: FileText, label: "Exports" },
-  { to: "/integrations", icon: Plug, label: "Integrations" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
