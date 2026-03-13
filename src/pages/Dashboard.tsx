@@ -104,6 +104,8 @@ export default function Dashboard() {
   const shipmentsToday = stats?.shipmentsToday || 0;
   const exceptionCount = stats?.exceptions || 0;
 
+  const isEmptyData = allOrders.length === 0 && allShipments.length === 0 && (stats?.inventoryAlerts || []).length === 0;
+
   const chartData = [
     { name: 'Shipped', value: shipped, color: 'hsl(var(--success))' },
     { name: 'Processing', value: periodOrders.filter((o: any) => o.status === 'processing').length, color: 'hsl(var(--info))' },
