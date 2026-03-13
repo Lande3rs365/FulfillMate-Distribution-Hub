@@ -382,10 +382,20 @@ export function DataIntakeContent({ embedded = false }: { embedded?: boolean }) 
               </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground">
-            {pending.preview.updatedOrders > 0 && "Updated orders will have their data replaced with the new file. "}
-            {pending.preview.onHoldOrders > 0 && "On-hold orders will be added to the exception queue for follow-up."}
-          </p>
+          {(pending.preview.updatedOrders > 0 || pending.preview.updatedShipments > 0) && (
+            <div className="flex items-start gap-2 p-3 rounded-md bg-warning/10 border border-warning/30 text-sm">
+              <AlertTriangle className="w-4 h-4 text-warning mt-0.5 shrink-0" />
+              <span className="text-foreground">
+                <strong>{(pending.preview.updatedOrders || 0) + (pending.preview.updatedShipments || 0)} duplicate records</strong> found.
+                These will be <strong>replaced with the latest data</strong> from this file.
+              </span>
+            </div>
+          )}
+          {pending.preview.onHoldOrders > 0 && (
+            <p className="text-xs text-muted-foreground">
+              On-hold orders will be added to the exception queue for follow-up.
+            </p>
+          )}
           <div className="flex gap-2">
             <button onClick={confirmImport} className="px-4 py-2 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors">
               Confirm Import ({pending.preview.totalRows} rows → {pending.type === "shipment" ? "shipments" : pending.type === "master" ? "orders + shipments" : "orders"})
