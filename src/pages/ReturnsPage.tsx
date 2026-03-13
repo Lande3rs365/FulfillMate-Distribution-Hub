@@ -379,39 +379,6 @@ export default function ReturnsPage() {
 
   if (!currentCompany) return <EmptyState icon={RotateCcw} title="No company selected" />;
 
-  const returnCounts = useMemo(() => ({
-    initiated: returns.filter(r => r.status === 'initiated').length,
-    received: returns.filter(r => r.status === 'received' || r.status === 'approved').length,
-    resolved: returns.filter(r => r.status === 'resolved').length,
-    refunded: returns.filter(r => r.stock_outcome === 'refund' || r.resolution === 'refund').length,
-  }), [returns]);
-
-  const statusTabs = [
-    { key: 'all', label: `All (${returns.length})` },
-    { key: 'initiated', label: `Awaiting (${returnCounts.initiated})` },
-    { key: 'in_progress', label: `In Progress (${returnCounts.received})` },
-    { key: 'resolved', label: `Resolved (${returnCounts.resolved})` },
-  ];
-
-  const filteredReturns = useMemo(() => {
-    let result = returns;
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'initiated') result = result.filter(r => r.status === 'initiated');
-      else if (statusFilter === 'in_progress') result = result.filter(r => r.status === 'received' || r.status === 'approved');
-      else if (statusFilter === 'resolved') result = result.filter(r => r.status === 'resolved');
-    }
-    if (search) {
-      const q = search.toLowerCase();
-      result = result.filter(r =>
-        (r.orders?.order_number || '').toLowerCase().includes(q) ||
-        (r.orders?.customer_name || '').toLowerCase().includes(q) ||
-        (r.reason || '').toLowerCase().includes(q) ||
-        (r.sku || '').toLowerCase().includes(q)
-      );
-    }
-    return result;
-  }, [returns, statusFilter, search]);
-
   return (
     <div className="p-4 md:p-6 space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
