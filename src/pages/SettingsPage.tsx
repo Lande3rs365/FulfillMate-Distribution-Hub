@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Building2, MapPin, Users, Save, Loader2, Plus, Trash2, Copy,
-  Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug, User,
+  Mail, UserPlus, X, Crown, Lock, Upload, FileText, Plug, Shield, User,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { format } from "date-fns";
