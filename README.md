@@ -1,6 +1,9 @@
-# FulfillMate
+🚧 Early Development — Private Project  
+Internal project — not yet public.
 
-### Operations Control for Ecommerce Distribution
+#F
+
+Operations Control for Ecommerce Distribution
 
 FulfillMate is an operations control hub for ecommerce fulfilment teams.
 
@@ -225,11 +228,50 @@ Each company’s data is isolated using `company_id`, allowing distribution grou
 
 ---
 
-# Development Setup
+### Development Setup
 
-Clone the repo:
+Clone the repository:
 
 ```bash
 git clone <repo-url>
 cd FulfillMate-Distribution-Hub
 npm install
+
+Create an environment file:
+```bash
+cp .env.example .env
+
+Start the development server:
+npm run dev
+
+
+This is **standard for React / Supabase projects**.
+
+---
+
+# 4️⃣ Only include `.env.example` if it exists
+
+Check your repo.
+
+If you **do not have `.env.example`**, you should create it.
+
+Create a file:
+.env.example
+
+Inside:
+
+```env
+VITE_SUPABASE_URL=
+VITE_SUPABASE_PUBLISHABLE_KEY=
+
+## Project Status
+
+FulfillMate is currently under active development.
+
+Core operational modules such as orders, shipments, inventory, and returns are functional while integrations, automation features, and the AI agent are still in development.
+
+## Vision
+
+FulfillMate aims to become the operations operating system for ecommerce fulfilment teams.
+
+The goal is to replace spreadsheets, inbox chasing, and disconnected dashboards with a single operational control hub where orders, shipments, inventory, returns, and exceptions can be managed in one place.
