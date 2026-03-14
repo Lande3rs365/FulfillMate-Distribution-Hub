@@ -198,7 +198,9 @@ export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: 
               {!collapsed && <span>{label}</span>}
               {ping && (
                 <span className={cn("flex h-2 w-2", collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}>
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  {agentDotState === 'animate' && (
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                  )}
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                 </span>
               )}
