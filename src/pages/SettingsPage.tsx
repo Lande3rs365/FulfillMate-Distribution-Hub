@@ -926,9 +926,6 @@ export default function SettingsPage() {
         <TabsContent value="exports">
           <ExportsContent embedded />
         </TabsContent>
-        <TabsContent value="ai-agent">
-          <AIAgentComingSoon />
-        </TabsContent>
       </Tabs>
     </div>
   );
