@@ -74,9 +74,6 @@ export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: 
       }
     } catch {}
   }, []);
-      } catch {}
-    }
-  }, [location.pathname]);
 
   useEffect(() => {
     if (!user) return;
