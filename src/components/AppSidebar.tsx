@@ -4,7 +4,7 @@ import {
   AlertTriangle, ChevronLeft, ChevronRight,
   ArrowRightLeft, Ship, RotateCcw, LogOut, Building2, ChevronsUpDown, Tag, User, Settings, Bot
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const CURRENT_AGENT_PHASE = "phase-1"; // bump when a new roadmap phase ships
 import { cn } from "@/lib/utils";
@@ -45,32 +45,15 @@ export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: 
     job_title: null,
   });
 
-  // Smart ping dot: animate → static → reset per phase
+  // Smart ping dot: animate 5 pulses → static → reset per phase
   const [agentDotState, setAgentDotState] = useState<'animate' | 'static'>(() => {
     try {
       const stored = JSON.parse(localStorage.getItem('ai-agent-visits') || '{}');
       if (stored.phase !== CURRENT_AGENT_PHASE) return 'animate';
       if (stored.visited) return 'static';
-      if ((stored.exposures || 0) >= 5) return 'static';
       return 'animate';
     } catch { return 'animate'; }
   });
-
-  const exposureTracked = useRef(false);
-  useEffect(() => {
-    if (exposureTracked.current) return;
-    exposureTracked.current = true;
-    try {
-      const stored = JSON.parse(localStorage.getItem('ai-agent-visits') || '{}');
-      if (stored.phase !== CURRENT_AGENT_PHASE) {
-        localStorage.setItem('ai-agent-visits', JSON.stringify({ phase: CURRENT_AGENT_PHASE, exposures: 1, visited: false }));
-        return;
-      }
-      const exposures = Math.min((stored.exposures || 0) + 1, 5);
-      localStorage.setItem('ai-agent-visits', JSON.stringify({ ...stored, exposures }));
-      if (exposures >= 5 && !stored.visited) setAgentDotState('static');
-    } catch {}
-  }, []);
 
   useEffect(() => {
     if (location.pathname === '/ai-agent') {
@@ -81,6 +64,16 @@ export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: 
       } catch {}
     }
   }, [location.pathname]);
+
+  // On new phase, reset localStorage
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('ai-agent-visits') || '{}');
+      if (stored.phase !== CURRENT_AGENT_PHASE) {
+        localStorage.setItem('ai-agent-visits', JSON.stringify({ phase: CURRENT_AGENT_PHASE, visited: false }));
+      }
+    } catch {}
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -199,7 +192,7 @@ export function SidebarContent({ collapsed = false, onNavigate }: { collapsed?: 
               {ping && (
                 <span className={cn("flex h-2 w-2", collapsed ? "absolute top-1.5 right-1.5" : "ml-auto")}>
                   {agentDotState === 'animate' && (
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="animate-ping-5 absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
                   )}
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
                 </span>
