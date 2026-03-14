@@ -4,7 +4,7 @@ import {
   AlertTriangle, ChevronLeft, ChevronRight,
   ArrowRightLeft, Ship, RotateCcw, LogOut, Building2, ChevronsUpDown, Tag, User, Settings, Bot
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 const CURRENT_AGENT_PHASE = "phase-1"; // bump when a new roadmap phase ships
 import { cn } from "@/lib/utils";
